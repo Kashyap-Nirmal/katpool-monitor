@@ -1,10 +1,12 @@
 import { startServer } from './web';
+import { configServer } from './config';
 import { startMetricsServer, updateMetrics } from './metrics';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 async function main() {
+  configServer();
   startServer();
   startMetricsServer();
 
