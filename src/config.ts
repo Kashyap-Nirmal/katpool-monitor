@@ -21,6 +21,6 @@ app.post('/postconfig', (req, res) => {
 
 export function configServer() {
   app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+    console.log(`API Config Server running at http://localhost:${port}`);
   });
 }

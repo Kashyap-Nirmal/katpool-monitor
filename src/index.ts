@@ -6,11 +6,16 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 async function main() {
+  console.log(`Main: starting config server`);
   configServer();
+  console.log(`Main: starting API server for front-end`);
   startServer();
+  console.log(`Main: starting Metric Server`);
   startMetricsServer();
 
+  console.log(`Main: Setting up interval`);
   setInterval(async () => {
+    console.log(`Main: Updating metrics`);
     await updateMetrics();
   }, 10000);
 }

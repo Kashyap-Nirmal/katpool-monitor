@@ -8,6 +8,7 @@ const client = new Client({
   connectionString: process.env.DATABASE_URL,
 });
 
+console.log(`Connecting DB`);
 client.connect();
 
 export async function getBalances() {

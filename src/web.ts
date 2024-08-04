@@ -28,6 +28,6 @@ app.get('/config', (req, res) => {
 
 export function startServer() {
   app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+    console.log(`API Server running at http://localhost:${port}`);
   });
 }
