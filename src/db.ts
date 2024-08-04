@@ -8,10 +8,11 @@ const client = new Client({
   connectionString: process.env.DATABASE_URL,
 });
 
-console.log(`Connecting DB`);
+console.log(`DB: Connecting DB`);
 client.connect();
 
 export async function getBalances() {
+  console.log(`DB: getting balances`);
   const res = await client.query('SELECT miner_id, wallet, balance FROM miners_balance');
   const balances: Record<string, Record<string, Decimal>> = {};
   
@@ -29,6 +30,7 @@ export async function getBalances() {
 }
 
 export async function getTotals() {
+  console.log(`DB: getting totals`);
   const res = await client.query('SELECT address, total FROM wallet_total');
   const totals: Record<string, Decimal> = {};
 

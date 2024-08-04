@@ -20,6 +20,7 @@ register.registerMetric(balanceGauge);
 register.registerMetric(totalGauge);
 
 export async function updateMetrics() {
+  console.log(`Metrics: enteringupdateMetrics function`);
   const balances = await getBalances();
   for (const wallet in balances) {
     for (const miner_id in balances[wallet]) {

@@ -4,6 +4,7 @@ import { startMetricsServer, updateMetrics } from './metrics';
 import dotenv from 'dotenv';
 
 dotenv.config();
+console.log(`Main: starting main()`);
 
 async function main() {
   console.log(`Main: starting config server`);
