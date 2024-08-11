@@ -15,7 +15,7 @@ export async function getBalances() {
   console.log(`DB: getting balances`);
   const res = await client.query('SELECT miner_id, wallet, balance FROM miners_balance');
   const balances: Record<string, Record<string, Decimal>> = {};
-  
+
   res.rows.forEach(row => {
     const wallet = row.wallet;
     const miner_id = row.miner_id;
@@ -41,4 +41,11 @@ export async function getTotals() {
   });
 
   return totals;
+}
+
+// New function to retrieve payments by wallet_address
+export async function getPaymentsByWallet(walletAddress: string) {
+  console.log(`DB: getting payments for wallet_address: ${walletAddress}`);
+  const res = await client.query('SELECT * FROM payments WHERE wallet_address = $1 ORDER BY timestamp DESC', [walletAddress]);
+  return res.rows;
 }

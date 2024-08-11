@@ -1,11 +1,12 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { getBalances, getTotals } from './db';
+import { getBalances, getTotals, getPaymentsByWallet } from './db'; // Import the new function
 
 const app = express();
 const port = 9301;
 
+// Existing API endpoints
 app.get('/balance', async (req, res) => {
   const balances = await getBalances();
   res.json({ balance: balances });
@@ -26,6 +27,19 @@ app.get('/config', (req, res) => {
   }
 });
 
+// New API endpoint to retrieve payments by wallet_address
+app.get('/api/payments/:wallet_address', async (req, res) => {
+  const walletAddress = req.params.wallet_address;
+  try {
+    const payments = await getPaymentsByWallet(walletAddress); // Use the function from db.ts
+    res.json(payments);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error retrieving payments');
+  }
+});
+
+// Start the server
 export function startServer() {
   app.listen(port, () => {
     console.log(`API Server running at http://localhost:${port}`);
