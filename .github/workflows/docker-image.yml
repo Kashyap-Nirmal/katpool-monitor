@@ -1,4 +1,4 @@
-name: Docker Push kaspool-monitor image
+name: Docker Push katpool-monitor image
 
 on:
   push:

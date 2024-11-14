@@ -1,4 +1,4 @@
-# kaspool-monitor
+# katpool-monitor
 
 To install dependencies:
 
