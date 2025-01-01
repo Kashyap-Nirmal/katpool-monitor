@@ -2,15 +2,8 @@ import axios from "axios";
 import * as dotenv from "dotenv";
 import { stringifyHashrate } from './utils';
 
-// Load environment variables
 dotenv.config();
-
 const PROMETHEUS_URL = process.env.MONITORING;
-
-if (!PROMETHEUS_URL) {
-  console.error("Error: PROMETHEUS_URL is not set in the .env file.");
-  process.exit(1);
-}
 
 async function queryPrometheus(timeInMin: number) {
   try {

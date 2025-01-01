@@ -6,6 +6,11 @@ import dotenv from 'dotenv';
 dotenv.config();
 console.log(`Main: starting main()`);
 
+const PROMETHEUS_URL = process.env.MONITORING;
+if (!PROMETHEUS_URL) {
+  throw new Error('Environment variable PROMETHEUS_URL is not set.');
+}
+
 async function main() {
   console.log(`Main: starting config server`);
   configServer();
