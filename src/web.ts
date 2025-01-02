@@ -62,7 +62,7 @@ app.get('/api/payments/:wallet_address', async (req, res) => {
   const walletAddress = req.params.wallet_address;
   try {
     const payments = await getPaymentsByWallet(walletAddress); // Use the function from db.ts
-    res.json(payments);
+    res.status(200).json(payments);
   } catch (err) {
     console.error(err);
     res.status(500).send('Error retrieving payments');
