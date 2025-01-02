@@ -3,7 +3,7 @@ import * as dotenv from "dotenv";
 import { stringifyHashrate } from './utils';
 
 dotenv.config();
-const PROMETHEUS_URL = process.env.MONITORING;
+const PROMETHEUS_URL = process.env.MONITORING || "http://kas.katpool.xyz:8080";
 
 async function queryPrometheus(timeInMin: number) {
   try {
@@ -62,6 +62,3 @@ export async function getCurrentPoolHashRate() {
 		console.error('Error querying pool hash rate:', err)
 	}
 }
-
-// Run the function
-queryPrometheus(120);
