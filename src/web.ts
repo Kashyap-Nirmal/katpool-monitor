@@ -2,7 +2,6 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { getBalances, getTotals, getPaymentsByWallet, getPayments } from './db'; // Import the new function
-import { getCurrentPoolHashRate } from './prom';
 
 const app = express();
 const port = 9301;
@@ -27,25 +26,6 @@ app.get('/config', (req, res) => {
     res.status(404).send('Config file not found.');
   }
 });
-
-// app.get('/api/miningPoolStats', async (req, res) => {
-//   try {
-//     const coinMined = "Kaspa";
-//     const poolName = "Kat Pool";
-//     const poolUrl = "https://app.katpool.xyz";
-//     const poolHashRate = await getCurrentPoolHashRate();
-//     const poolLevelData = {
-//       coinMined,
-//       poolName,
-//       poolUrl,
-//       poolHashRate,
-//     } // TODO : recentBlocks
-//     res.status(200).send(poolLevelData)
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).send('Error retrieving mining pool stats')
-//   }
-// })
 
 app.get('/api/pool/payouts', async (req, res) => {
   try{

@@ -61,7 +61,7 @@ export async function getTotals() {
 export async function getPayments() {
   const client = await pool.connect();
   try{
-    const res = await client.query('SELECT wallet_address, amount, timestamp, transaction_hash FROM payments ORDER BY timestamp DESC');
+    const res = await client.query('SELECT wallet_address, amount, timestamp, transaction_hash FROM payments ORDER BY timestamp DESC LIMIT 500');
     return res.rows
   } finally {
     client.release()
