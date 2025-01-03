@@ -3,7 +3,7 @@ import * as dotenv from "dotenv";
 import { stringifyHashrate } from './utils';
 
 dotenv.config();
-const PROMETHEUS_URL = process.env.MONITORING || "http://kas.katpool.xyz:8080";
+const PROMETHEUS_URL = "katpool-prmths:9090";
 
 async function queryPrometheus(timeInMin: number) {
   try {
