@@ -23,4 +23,3 @@ POSTGRES_DB=<db-name>
 POSTGRES_HOSTNAME='katpool-db' # Configure the hostname.
 DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOSTNAME}:5432/${POSTGRES_DB}"
 ```
-.
