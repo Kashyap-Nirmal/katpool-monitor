@@ -1,7 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { getBalances, getTotals, getPaymentsByWallet } from './db'; // Import the new function
+import { getBalances, getTotals, getPaymentsByWallet, getPayments } from './db'; // Import the new function
 
 const app = express();
 const port = 9301;
@@ -27,12 +27,22 @@ app.get('/config', (req, res) => {
   }
 });
 
+app.get('/api/pool/payouts', async (req, res) => {
+  try{
+    const payments = await getPayments();
+    res.status(200).json(payments)
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error retrieving payments')
+  }
+})
+
 // New API endpoint to retrieve payments by wallet_address
 app.get('/api/payments/:wallet_address', async (req, res) => {
   const walletAddress = req.params.wallet_address;
   try {
     const payments = await getPaymentsByWallet(walletAddress); // Use the function from db.ts
-    res.json(payments);
+    res.status(200).json(payments);
   } catch (err) {
     console.error(err);
     res.status(500).send('Error retrieving payments');
