@@ -58,12 +58,22 @@ export async function getTotals() {
   }
 }
 
+export async function getPayments() {
+  const client = await pool.connect();
+  try{
+    const res = await client.query('SELECT wallet_address, amount, timestamp, transaction_hash FROM payments ORDER BY timestamp DESC LIMIT 500');
+    return res.rows
+  } finally {
+    client.release()
+  }
+}
+
 // New function to retrieve payments by wallet_address
 export async function getPaymentsByWallet(walletAddress: string) {
   const client = await pool.connect();
   console.log(`DB: getting payments for wallet_address: ${walletAddress}`);
   try {
-    const res = await client.query('SELECT * FROM payments WHERE wallet_address = $1 ORDER BY timestamp DESC', [walletAddress]);
+    const res = await client.query('SELECT * FROM payments WHERE $1 = ANY(wallet_address) ORDER BY timestamp DESC', [walletAddress]);
     return res.rows;
   } finally {
     client.release();
