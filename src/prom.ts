@@ -59,3 +59,35 @@ export async function getBlocks() {
 		console.error('Error querying blocks:', err)
 	}	
 }
+
+export async function getLastBlockDetails() {
+	try {
+		let url = `${PROMETHEUS_URL}/api/v1/query`;
+		let query = `max(success_blocks_details)`
+		let response = await axios.get(url, {
+			params: { query },
+		});
+		let data = response.data;
+		let results = data.data?.result;
+		if (results && results?.length > 0) {
+			const lastblocktime = results[0]?.value[1]
+			url = `${PROMETHEUS_URL}/api/v1/query`;
+			query = `success_blocks_details==${lastblocktime}`
+			response = await axios.get(url, {
+				params: { query },
+			});
+			data = response.data;
+			results = data.data?.result;
+			if (results && results?.length > 0) {
+				const lastblock = results[0]?.metric?.daa_score
+				return {lastblocktime, lastblock}
+			} else {
+				console.log(`No results found for the query - ${query}.`);
+			}
+		} else {
+			console.log(`No results found for the query - ${query}.`);
+		}
+	} catch (err) {
+		console.error('Error querying blocks:', err)
+	}	
+}

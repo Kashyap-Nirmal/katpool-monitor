@@ -2,7 +2,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { getBalances, getTotals, getPaymentsByWallet } from './db'; // Import the new function
-import { getCurrentPoolHashRate, getBlocks } from './prom';
+import { getCurrentPoolHashRate, getBlocks, getLastBlockDetails } from './prom';
 import *  as constants from './constants';
 
 const app = express();
@@ -32,7 +32,7 @@ app.get('/config', (req, res) => {
 app.get('/api/miningPoolStats', async (req, res) => {
   try {
     const configPath = path.resolve('./config/received_config.json');
-    let poolFee, url, advertise_image, minPay, blocks;
+    let poolFee, url, advertise_image, minPay, blocks, lastBlockDetails, lastblock, lastblocktime;
     if (fs.existsSync(configPath)) {
       const configData = fs.readFileSync(configPath, 'utf-8');
       const configJson = JSON.parse(configData)
@@ -44,6 +44,12 @@ app.get('/api/miningPoolStats', async (req, res) => {
 
     const current_hashRate = await getCurrentPoolHashRate();
     blocks = await getBlocks();
+    lastBlockDetails = await getLastBlockDetails()
+
+    if (lastBlockDetails) {
+      lastblock = lastBlockDetails.lastblock
+      lastblocktime = lastBlockDetails.lastblocktime
+    }
     url = url || constants.pool_url;
     poolFee = poolFee || constants.pool_fee;
     advertise_image = advertise_image || constants.advertise_image_link; 
@@ -59,7 +65,9 @@ app.get('/api/miningPoolStats', async (req, res) => {
       minPay,
       country : constants.country,
       feeType : constants.feeType,
-    } // TODO : blocks
+      lastblock,
+      lastblocktime
+    } 
     res.status(200).send(poolLevelData)
   } catch (err) {
     console.error(err);
