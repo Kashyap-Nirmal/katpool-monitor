@@ -17,7 +17,7 @@ export async function getCurrentPoolHashRate() {
 		if (results && results.length > 0) {
 			let hashRate;
 			results.forEach((result: any) => {
-				hashRate = stringifyHashrate(result.value[1])
+				hashRate = stringifyHashrate(result?.value[1])
 			});
 			return hashRate
 		} else {
@@ -36,7 +36,7 @@ interface block_detail {
 export async function getBlocks() {
 	try {
 		const url = `${PROMETHEUS_URL}/api/v1/query`;
-		const query = `paid_blocks_1min_count`
+		const query = `success_blocks_details`
 		const response = await axios.get(url, {
 			params: { query },
 		});
@@ -47,7 +47,7 @@ export async function getBlocks() {
 			results.forEach((result: any) => {
 				let detail : block_detail = {
 					block_hash: result?.metric?.block_hash,
-					[result?.metric?.daa_score.toString()]: result?.metric?.timestamp,
+					[result?.metric?.daa_score.toString()]: result?.value[1],
 				}
 				block_details.push(detail)
 			});
