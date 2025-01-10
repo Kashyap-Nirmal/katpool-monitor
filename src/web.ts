@@ -2,6 +2,8 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { getBalances, getTotals, getPaymentsByWallet, getPayments } from './db'; // Import the new function
+import { getCurrentPoolHashRate, getBlocks, getLastBlockDetails } from './prom';
+import *  as constants from './constants';
 
 const app = express();
 const port = 9301;
@@ -26,6 +28,52 @@ app.get('/config', (req, res) => {
     res.status(404).send('Config file not found.');
   }
 });
+
+app.get('/api/miningPoolStats', async (req, res) => {
+  try {
+    const configPath = path.resolve('./config/received_config.json');
+    let poolFee, url, advertise_image, minPay, blocks, lastBlockDetails, lastblock, lastblocktime;
+    if (fs.existsSync(configPath)) {
+      const configData = fs.readFileSync(configPath, 'utf-8');
+      const configJson = JSON.parse(configData)
+      poolFee = configJson?.treasury?.fee;
+      url = configJson?.hostname;
+      advertise_image = configJson?.advertise_image_link;
+      minPay = configJson?.thresholdAmount! / constants.KAStoSompi;
+    }
+
+    const current_hashRate = await getCurrentPoolHashRate();
+    blocks = await getBlocks();
+    lastBlockDetails = await getLastBlockDetails()
+
+    if (lastBlockDetails) {
+      lastblock = lastBlockDetails.lastblock
+      lastblocktime = lastBlockDetails.lastblocktime
+    }
+    url = url || constants.pool_url;
+    poolFee = poolFee || constants.pool_fee;
+    advertise_image = advertise_image || constants.advertise_image_link; 
+
+    const poolLevelData = {
+      coin_mined : constants.coin_mined,
+      pool_name : constants.pool_name,
+      url,
+      poolFee,
+      current_hashRate,
+      blocks,
+      advertise_image_link : constants.advertise_image_link,
+      minPay,
+      country : constants.country,
+      feeType : constants.feeType,
+      lastblock,
+      lastblocktime
+    } 
+    res.status(200).send(poolLevelData)
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error retrieving mining pool stats')
+  }
+})
 
 app.get('/api/pool/payouts', async (req, res) => {
   try{
