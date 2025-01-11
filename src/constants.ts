@@ -5,7 +5,7 @@ const pool_url = "https://kas.katpool.xyz";
 const pool_fee = 0.75;
 const country = "US";
 const feeType = "PPLNS";
-const advertise_image_link = "";
+const advertise_image_link = "https://app.katpool.xyz/api/ad";
 
 export {
     KAStoSompi,
