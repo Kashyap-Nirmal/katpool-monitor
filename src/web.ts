@@ -1,7 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { getBalances, getTotals, getPaymentsByWallet, getPayments } from './db'; // Import the new function
+import { getBalances, getTotals, getPaymentsByWallet, getPayments, getBlockDetails } from './db'; // Import the new function
 import { getCurrentPoolHashRate, getBlocks, getLastBlockDetails } from './prom';
 import *  as constants from './constants';
 
@@ -96,6 +96,16 @@ app.get('/api/payments/:wallet_address', async (req, res) => {
     res.status(500).send('Error retrieving payments');
   }
 });
+
+app.get('/api/blockdetails', async (req, res) => {
+  try{
+    const blockdetails = await getBlockDetails();
+    res.status(200).json(blockdetails)
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error retrieving blockdetails')
+  }
+})
 
 // Start the server
 export function startServer() {

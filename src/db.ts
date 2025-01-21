@@ -39,6 +39,18 @@ export async function getBalances() {
   }
 }
 
+export async function getBlockDetails() {
+  const client = await pool.connect();
+  console.log(`DB: getting block details`);
+  try {
+    const res = await client.query('SELECT block_hash, miner_id, pool_address, wallet, daa_score, timestamp FROM block_details');
+    console.log("Res.rows ", res.rows)
+    return res.rows;
+  } finally {
+    client.release();
+  }
+}
+
 export async function getTotals() {
   const client = await pool.connect();
   console.log(`DB: getting totals`);
