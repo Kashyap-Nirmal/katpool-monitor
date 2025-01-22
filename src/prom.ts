@@ -36,7 +36,7 @@ interface block_detail {
 export async function getBlocks() {
 	try {
 		const url = `${PROMETHEUS_URL}/api/v1/query`;
-		const query = `success_blocks_details`
+		const query = `last_over_time(success_blocks_details[1y])`
 		const response = await axios.get(url, {
 			params: { query },
 		});

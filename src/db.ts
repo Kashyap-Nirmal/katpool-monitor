@@ -43,7 +43,7 @@ export async function getBlockDetails() {
   const client = await pool.connect();
   console.log(`DB: getting block details`);
   try {
-    const res = await client.query('SELECT block_hash, miner_id, pool_address, wallet, daa_score, timestamp FROM block_details');
+    const res = await client.query('SELECT mined_block_hash, miner_id, pool_address, reward_block_hash, wallet, daa_score, miner_reward, timestamp FROM block_details');
     console.log("Res.rows ", res.rows)
     return res.rows;
   } finally {
