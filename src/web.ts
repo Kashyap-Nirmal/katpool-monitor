@@ -108,7 +108,7 @@ app.get('/api/pool/nacho_payouts', async (req, res) => {
 })
 
 // New API endpoint to retrieve payments by wallet_address
-app.get('/api/payments/nacho_payouts/:wallet_address', async (req, res) => {
+app.get('/api/nacho_payments/:wallet_address', async (req, res) => {
   const walletAddress = req.params.wallet_address;
   try {
     const payments = await getPaymentsByWallet(walletAddress, 'nacho_payments'); // Use the function from db.ts
