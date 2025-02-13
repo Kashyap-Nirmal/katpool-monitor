@@ -77,7 +77,7 @@ app.get('/api/miningPoolStats', async (req, res) => {
 
 app.get('/api/pool/payouts', async (req, res) => {
   try{
-    const payments = await getPayments();
+    const payments = await getPayments('payments');
     res.status(200).json(payments)
   } catch (err) {
     console.error(err);
@@ -89,7 +89,29 @@ app.get('/api/pool/payouts', async (req, res) => {
 app.get('/api/payments/:wallet_address', async (req, res) => {
   const walletAddress = req.params.wallet_address;
   try {
-    const payments = await getPaymentsByWallet(walletAddress); // Use the function from db.ts
+    const payments = await getPaymentsByWallet(walletAddress, 'payments'); // Use the function from db.ts
+    res.status(200).json(payments);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error retrieving payments');
+  }
+});
+
+app.get('/api/pool/nacho_payouts', async (req, res) => {
+  try{
+    const payments = await getPayments('nacho_payments');
+    res.status(200).json(payments)
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error retrieving payments')
+  }
+})
+
+// New API endpoint to retrieve payments by wallet_address
+app.get('/api/payments/nacho_payouts/:wallet_address', async (req, res) => {
+  const walletAddress = req.params.wallet_address;
+  try {
+    const payments = await getPaymentsByWallet(walletAddress, 'nacho_payments'); // Use the function from db.ts
     res.status(200).json(payments);
   } catch (err) {
     console.error(err);

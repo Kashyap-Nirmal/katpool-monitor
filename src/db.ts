@@ -70,10 +70,11 @@ export async function getTotals() {
   }
 }
 
-export async function getPayments() {
-  const client = await pool.connect();
+export async function getPayments(tableName: string) {
+  const client = await pool.connect();  
+  let amount = (tableName == 'nacho_payments') ? 'nacho_amount' : 'amount';
   try{
-    const res = await client.query('SELECT wallet_address, amount, timestamp, transaction_hash FROM payments ORDER BY timestamp DESC LIMIT 500');
+    const res = await client.query(`SELECT wallet_address, ${amount}, timestamp, transaction_hash FROM ${tableName} ORDER BY timestamp DESC LIMIT 500`);
     return res.rows
   } finally {
     client.release()
@@ -81,11 +82,11 @@ export async function getPayments() {
 }
 
 // New function to retrieve payments by wallet_address
-export async function getPaymentsByWallet(walletAddress: string) {
+export async function getPaymentsByWallet(walletAddress: string, tableName: string) {
   const client = await pool.connect();
   console.log(`DB: getting payments for wallet_address: ${walletAddress}`);
   try {
-    const res = await client.query('SELECT * FROM payments WHERE $1 = ANY(wallet_address) ORDER BY timestamp DESC', [walletAddress]);
+    const res = await client.query(`SELECT * FROM ${tableName} WHERE $1 = ANY(wallet_address) ORDER BY timestamp DESC`, [walletAddress]);
     return res.rows;
   } finally {
     client.release();
