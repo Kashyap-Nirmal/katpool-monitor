@@ -16,11 +16,11 @@ const pool = new Pool({
 
 console.log(`DB: Connecting DB`);
 
-export async function getBalances() {
+export async function getBalances(column: string) {
   const client = await pool.connect();
   console.log(`DB: getting balances`);
   try {
-    const res = await client.query('SELECT miner_id, wallet, balance FROM miners_balance');
+    const res = await client.query(`SELECT miner_id, wallet, ${column} as balance FROM miners_balance`);
     const balances: Record<string, Record<string, Decimal>> = {};
 
     res.rows.forEach(row => {

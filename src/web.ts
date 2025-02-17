@@ -10,7 +10,12 @@ const port = 9301;
 
 // Existing API endpoints
 app.get('/balance', async (req, res) => {
-  const balances = await getBalances();
+  const balances = await getBalances('balance');
+  res.json({ balance: balances });
+});
+
+app.get('/nacho_balance', async (req, res) => {
+  const balances = await getBalances('nacho_rebate_kas');
   res.json({ balance: balances });
 });
 
