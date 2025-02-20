@@ -1,7 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { getBalances, getTotals, getPaymentsByWallet, getPayments, getBlockDetails } from './db'; // Import the new function
+import { getBalances, getTotals, getPaymentsByWallet, getPayments, getBlockDetails, getBalanceByWallet } from './db'; // Import the new function
 import { getCurrentPoolHashRate, getBlocks, getLastBlockDetails } from './prom';
 import *  as constants from './constants';
 
@@ -14,9 +14,16 @@ app.get('/balance', async (req, res) => {
   res.json({ balance: balances });
 });
 
-app.get('/nacho_balance', async (req, res) => {
-  const balances = await getBalances('nacho_rebate_kas');
-  res.json({ balance: balances });
+// New API endpoint to retrieve balances by wallet_address
+app.get('/balance/:wallet_address', async (req, res) => {
+  const walletAddress = req.params.wallet_address;
+  try {
+    const balances = await getBalanceByWallet(walletAddress, 'miners_balance'); // Use the function from db.ts
+    res.json({ balance: balances });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error retrieving payments');
+  }
 });
 
 app.get('/total', async (req, res) => {
