@@ -92,3 +92,31 @@ export async function getPaymentsByWallet(walletAddress: string, tableName: stri
     client.release();
   }
 }
+
+// New function to retrieve Balance by wallet_address
+export async function getBalanceByWallet(wallet: string, tableName: string) {
+  const client = await pool.connect();
+  console.log(`DB: getting Balance for wallet_address: ${wallet}`);
+  try {
+    const res = await client.query(`SELECT * FROM ${tableName} WHERE wallet = $1`, [wallet]);
+    const balances: Record<string, Record<string, [Decimal, Decimal]>> = {};
+
+    res.rows.forEach(row => {
+      const wallet = row.wallet;
+      const miner_id = row.miner_id;
+      const balance = new Decimal(row.balance);
+      const nacho_rebate_kas = new Decimal(row.nacho_rebate_kas);
+      
+      if (!balances[wallet]) {
+        balances[wallet] = {};
+      }
+
+      // Store balance as an array with 2 elements
+      balances[wallet][miner_id] = [balance, nacho_rebate_kas];
+    });
+
+    return balances;
+  } finally {
+    client.release();
+  }
+}
