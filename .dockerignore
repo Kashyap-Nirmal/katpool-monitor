@@ -1,0 +1,13 @@
+# Version control
+.git
+.gitignore
+
+# Node & Bun stuff
+node_modules/
+bun*
+bun.lockb
+
+# Environment and secrets
+.env
+.env.local
+.secrets
