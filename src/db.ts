@@ -74,7 +74,13 @@ export async function getPayments(tableName: string) {
   const client = await pool.connect();  
   let amount = (tableName == 'nacho_payments') ? 'nacho_amount' : 'amount';
   try{
-    const res = await client.query(`SELECT wallet_address, ${amount}, timestamp, transaction_hash FROM ${tableName} ORDER BY timestamp DESC LIMIT 500`);
+    let res;
+    if (tableName == 'payments') {
+      res = await client.query(`SELECT ARRAY['']::text[] AS wallet_address, SUM(${amount}) AS ${amount}, MAX(timestamp) AS timestamp, transaction_hash FROM ${tableName} GROUP BY transaction_hash ORDER BY timestamp DESC LIMIT 500`);
+    } else {
+      res = await client.query(`SELECT wallet_address, ${amount}, timestamp, transaction_hash FROM ${tableName} ORDER BY timestamp DESC LIMIT 500`);
+    }
+
     return res.rows
   } finally {
     client.release()
