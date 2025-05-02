@@ -1,7 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { getBalances, getTotals, getPaymentsByWallet, getPayments, getBlockDetails, getBalanceByWallet } from './db'; // Import the new function
+import { getBalances, getTotals, getPaymentsByWallet, getPayments, getBlockDetails, getBalanceByWallet, getKASPayoutForLast48H } from './db'; // Import the new function
 import { getCurrentPoolHashRate, getBlocks, getLastBlockDetails } from './prom';
 import *  as constants from './constants';
 
@@ -94,6 +94,16 @@ app.get('/api/pool/payouts', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send('Error retrieving payments')
+  }
+})
+
+app.get('/api/pool/48hKASpayouts', async (req, res) => {
+  try{
+    const payments = await getKASPayoutForLast48H();
+    res.status(200).json(payments)
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error retrieving 48H KAS payments for Top miners')
   }
 })
 

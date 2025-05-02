@@ -99,6 +99,17 @@ export async function getPaymentsByWallet(walletAddress: string, tableName: stri
   }
 }
 
+// New function to retrieve KAS payments by wallet_address for 48H
+export async function getKASPayoutForLast48H() {
+  const client = await pool.connect();
+  try {
+    const res = await client.query(`SELECT wallet_address, SUM(amount) AS amount, MIN(timeStamp) as timeStamp FROM payments WHERE timestamp >= NOW() - INTERVAL '48 hours' GROUP BY wallet_address ORDER BY amount DESC;`);
+    return res.rows;
+  } finally {
+    client.release();
+  }
+}
+
 // New function to retrieve Balance by wallet_address
 export async function getBalanceByWallet(wallet: string, tableName: string) {
   const client = await pool.connect();
