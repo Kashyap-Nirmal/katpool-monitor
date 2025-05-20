@@ -110,6 +110,22 @@ export async function getKASPayoutForLast48H() {
   }
 }
 
+// Function to retrieve total KAS payouts for all wallets in the last 24 hours
+export async function getTotalKASPayoutForLast24H() {
+  const client = await pool.connect();
+  try {
+    const res = await client.query(`
+      SELECT 
+        SUM(amount) AS total_amount 
+      FROM payments 
+      WHERE timestamp >= NOW() - INTERVAL '24 hours';
+    `);
+    return res.rows[0]?.total_amount || 0;
+  } finally {
+    client.release();
+  }
+}
+
 // Retrieve nacho payments grouped by wallet_address
 export async function getNachoPaymentsGroupedByWallet() {
   const client = await pool.connect();

@@ -1,7 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { getBalances, getTotals, getPaymentsByWallet, getPayments, getBlockDetails, getBalanceByWallet, getKASPayoutForLast48H, getNachoPaymentsGroupedByWallet } from './db'; // Import the new function
+import { getBalances, getTotals, getPaymentsByWallet, getPayments, getBlockDetails, getBalanceByWallet, getKASPayoutForLast48H, getNachoPaymentsGroupedByWallet, getTotalKASPayoutForLast24H } from './db'; // Import the new function
 import { getCurrentPoolHashRate, getBlocks, getLastBlockDetails } from './prom';
 import *  as constants from './constants';
 
@@ -164,6 +164,16 @@ app.get('/api/pool/48hNACHOPayouts', async (req, res) => {
     res.status(500).send('Error retrieving 48hNACHOPayouts');
   }
 });
+
+app.get('/api/pool/24hTotalKASPayouts', async (req, res) => {
+  try{
+    const payments = await getTotalKASPayoutForLast24H();
+    res.status(200).json(payments/constants.KAStoSompi)
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error retrieving getTotalKASPayoutForLast24H')
+  }
+})
 
 // Start the server
 export function startServer() {
