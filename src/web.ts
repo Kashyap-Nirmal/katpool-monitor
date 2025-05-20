@@ -155,7 +155,7 @@ app.get('/api/pool/48hNACHOPayouts', async (req, res) => {
   try {
     const nacho_payments = await getNachoPaymentsGroupedByWallet();
     const formatted = nacho_payments.reduce((acc: { [key: string]: number }, item: { wallet_address: string, total_nacho_payment_amount: string }) => {
-      acc[item.wallet_address] = Number(item.total_nacho_payment_amount)/1e8;
+      acc[item.wallet_address] = Number(item.total_nacho_payment_amount);
       return acc;
     }, {});
     res.status(200).json(formatted);
@@ -168,7 +168,7 @@ app.get('/api/pool/48hNACHOPayouts', async (req, res) => {
 app.get('/api/pool/24hTotalKASPayouts', async (req, res) => {
   try{
     const payments = await getTotalKASPayoutForLast24H();
-    res.status(200).json(payments/constants.KAStoSompi)
+    res.status(200).json(payments)
   } catch (err) {
     console.error(err);
     res.status(500).send('Error retrieving getTotalKASPayoutForLast24H')
