@@ -69,20 +69,15 @@ app.get('/api/miningPoolStats', async (req, res) => {
     // Add miner_reward to each block
     const blockdetails = await getBlockDetails();
     const blocksWithRewards = (blocks || []).map(block => {
-      console.log('block', block);
       const matchingDetail = blockdetails.find(
         (detail: { mined_block_hash: string; miner_reward: string }) =>
           detail.mined_block_hash === block.block_hash
       );
 
-      
-      if(matchingDetail && matchingDetail.miner_reward > 0) {
-        console.log('matchingDetail', matchingDetail);
-        return {
-          ...block,
-          miner_reward: matchingDetail ? matchingDetail.miner_reward : '0',
-        };
-      }
+      return {
+        ...block,
+        miner_reward: matchingDetail ? matchingDetail.miner_reward : '0',
+      };
     });
     
     const poolLevelData = {
