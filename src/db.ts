@@ -71,9 +71,9 @@ export async function getTotals() {
 }
 
 export async function getPayments(tableName: string) {
-  const client = await pool.connect();  
+  const client = await pool.connect();
   let amount = (tableName == 'nacho_payments') ? 'nacho_amount' : 'amount';
-  try{
+  try {
     let res;
     if (tableName == 'payments') {
       res = await client.query(`SELECT ARRAY['']::text[] AS wallet_address, SUM(${amount}) AS ${amount}, MAX(timestamp) AS timestamp, transaction_hash FROM ${tableName} GROUP BY transaction_hash ORDER BY timestamp DESC LIMIT 500`);
@@ -105,6 +105,28 @@ export async function getKASPayoutForLast48H() {
   try {
     const res = await client.query(`SELECT wallet_address, SUM(amount) AS amount, MIN(timeStamp) as timeStamp FROM payments WHERE timestamp >= NOW() - INTERVAL '48 hours' GROUP BY wallet_address ORDER BY amount DESC;`);
     return res.rows;
+  } finally {
+    client.release();
+  }
+}
+
+// Retrieve nacho payments grouped by wallet_address
+export async function getNachoPaymentsGroupedByWallet() {
+  const client = await pool.connect();
+  console.log(`DB: getting top miners`);
+  try {
+    // Query SQL for payments and nacho totals
+    const result = await client.query(`
+      SELECT 
+        n.wallet_address,
+        SUM(n.nacho_amount) AS total_nacho_payment_amount
+      FROM public.nacho_payments n
+      WHERE n.timestamp >= NOW() - INTERVAL '48 hours'
+      GROUP BY n.wallet_address
+      ORDER BY total_nacho_payment_amount DESC;
+    `);
+
+    return result.rows;
   } finally {
     client.release();
   }
