@@ -66,13 +66,32 @@ app.get('/api/miningPoolStats', async (req, res) => {
     poolFee = poolFee || constants.pool_fee;
     advertise_image = advertise_image || constants.advertise_image_link; 
 
+    // Add miner_reward to each block
+    const blockdetails = await getBlockDetails();
+    const blocksWithRewards = (blocks || []).map(block => {
+      console.log('block', block);
+      const matchingDetail = blockdetails.find(
+        (detail: { mined_block_hash: string; miner_reward: string }) =>
+          detail.mined_block_hash === block.block_hash
+      );
+
+      
+      if(matchingDetail && matchingDetail.miner_reward > 0) {
+        console.log('matchingDetail', matchingDetail);
+        return {
+          ...block,
+          miner_reward: matchingDetail ? matchingDetail.miner_reward : '0',
+        };
+      }
+    });
+    
     const poolLevelData = {
       coin_mined : constants.coin_mined,
       pool_name : constants.pool_name,
       url,
       poolFee,
       current_hashRate,
-      blocks,
+      blocks: blocksWithRewards,
       advertise_image_link : constants.advertise_image_link,
       minPay,
       country : constants.country,
