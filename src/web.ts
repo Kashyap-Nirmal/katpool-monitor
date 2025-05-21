@@ -1,7 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { getBalances, getTotals, getPaymentsByWallet, getPayments, getBlockDetails, getBalanceByWallet, getKASPayoutForLast48H } from './db'; // Import the new function
+import { getBalances, getTotals, getPaymentsByWallet, getPayments, getBlockDetails, getBalanceByWallet, getKASPayoutForLast48H, getNachoPaymentsGroupedByWallet, getTotalKASPayoutForLast24H } from './db'; // Import the new function
 import { getCurrentPoolHashRate, getBlocks, getLastBlockDetails } from './prom';
 import *  as constants from './constants';
 
@@ -148,6 +148,30 @@ app.get('/api/blockdetails', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send('Error retrieving blockdetails')
+  }
+})
+
+app.get('/api/pool/48hNACHOPayouts', async (req, res) => {
+  try {
+    const nacho_payments = await getNachoPaymentsGroupedByWallet();
+    const formatted = nacho_payments.reduce((acc: { [key: string]: number }, item: { wallet_address: string, total_nacho_payment_amount: string }) => {
+      acc[item.wallet_address] = Number(item.total_nacho_payment_amount);
+      return acc;
+    }, {});
+    res.status(200).json(formatted);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error retrieving 48hNACHOPayouts');
+  }
+});
+
+app.get('/api/pool/24hTotalKASPayouts', async (req, res) => {
+  try{
+    const payments = await getTotalKASPayoutForLast24H();
+    res.status(200).json(payments)
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error retrieving getTotalKASPayoutForLast24H')
   }
 })
 
