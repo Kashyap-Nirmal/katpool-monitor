@@ -1,6 +1,7 @@
 import axios from "axios";
 import * as dotenv from "dotenv";
 import { stringifyHashrate } from './utils';
+import { cache } from './cron';
 
 dotenv.config();
 const PROMETHEUS_URL = process.env.MONITORING || "http://kas.katpool.xyz:8080";
@@ -35,13 +36,17 @@ interface block_detail {
 
 export async function getBlocks() {
 	try {
-		const url = `${PROMETHEUS_URL}/api/v1/query`;
-		const query = `last_over_time(success_blocks_details[1y])`
-		const response = await axios.get(url, {
-			params: { query },
-		});
-		const data = response.data;
-		const results = data.data?.result;
+		let results = cache.get('success_blocks_details');
+		if(!results) {
+			const url = `${PROMETHEUS_URL}/api/v1/query`;
+			const query = `last_over_time(success_blocks_details[365d])`
+			const response = await axios.get(url, {
+				params: { query },
+			});
+			const data = response.data;
+			results = data.data?.result;
+		}
+
 		let block_details : block_detail[] = [];
 		if (results && results.length > 0) {
 			results.forEach((result: any) => {
