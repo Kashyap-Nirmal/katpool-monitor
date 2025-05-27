@@ -35,16 +35,13 @@ interface block_detail {
 
 export async function getBlocks() {
 	try {
-		let results = cache.get('success_blocks_details');
-		if(!results) {
-			const url = `${PROMETHEUS_URL}/api/v1/query`;
-			const query = `last_over_time(success_blocks_details[365d])`
-			const response = await axios.get(url, {
-				params: { query },
-			});
-			const data = response.data;
-			results = data.data?.result;
-		}
+		const url = `${PROMETHEUS_URL}/api/v1/query`;
+		const query = `last_over_time(success_blocks_details[1y])`
+		const response = await axios.get(url, {
+			params: { query },
+		});
+		const data = response.data;
+		const results = data.data?.result
 
 		let block_details : block_detail[] = [];
 		if (results && results.length > 0) {
@@ -56,6 +53,38 @@ export async function getBlocks() {
 				block_details.push(detail)
 			});
 			return block_details
+		} else {
+			console.log(`No results found for the query - ${query}.`);
+		}
+	} catch (err) {
+		console.error('Error querying blocks:', err)
+	}	
+}
+
+export async function getLastBlockDetails() {
+	try {
+		let url = `${PROMETHEUS_URL}/api/v1/query`;
+		let query = `max(success_blocks_details)`
+		let response = await axios.get(url, {
+			params: { query },
+		});
+		let data = response.data;
+		let results = data.data?.result;
+		if (results && results?.length > 0) {
+			const lastblocktime = results[0]?.value[1]
+			url = `${PROMETHEUS_URL}/api/v1/query`;
+			query = `success_blocks_details==${lastblocktime}`
+			response = await axios.get(url, {
+				params: { query },
+			});
+			data = response.data;
+			results = data.data?.result;
+			if (results && results?.length > 0) {
+				const lastblock = results[0]?.metric?.daa_score
+				return {lastblocktime, lastblock}
+			} else {
+				console.log(`No results found for the query - ${query}.`);
+			}
 		} else {
 			console.log(`No results found for the query - ${query}.`);
 		}
