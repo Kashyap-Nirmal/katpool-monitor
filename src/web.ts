@@ -2,7 +2,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { getBalances, getTotals, getPaymentsByWallet, getPayments, getBlockDetails, getBalanceByWallet, getKASPayoutForLast48H, getNachoPaymentsGroupedByWallet, getTotalKASPayoutForLast24H, getBlockCount } from './db'; // Import the new function
-import { getCurrentPoolHashRate, getBlocks, getLastBlockDetails } from './prom';
+import { getCurrentPoolHashRate, getBlocks } from './prom';
 import *  as constants from './constants';
 
 const app = express();
@@ -68,29 +68,16 @@ app.get('/api/miningPoolStats', async (req, res) => {
 
     // Add miner_reward to each block
     const blockdetails = await getBlockDetails();
-    const blocksWithRewards = (blocks || []).flatMap(block => {
+    const blocksWithRewards = (blocks || []).map(block => {
       const matchingDetail = blockdetails.find(
         (detail: { mined_block_hash: string; miner_reward: string }) =>
           detail.mined_block_hash === block.block_hash
       );
 
-      // Only filter blocks with empty reward_block_hash from the past 1 hour
-      const oneHourAgo = new Date(Date.now() - (1 * 60 * 60 * 1000))
-      if (matchingDetail?.reward_block_hash && matchingDetail?.timeStamp && new Date(matchingDetail.timeStamp) >= oneHourAgo) {
-        return {
-          ...block,
-          reward_block_hash: matchingDetail.reward_block_hash,
-          miner_reward: matchingDetail.miner_reward || '0',
-        };
-      } else if(matchingDetail) {
-        return {
-          ...block,
-          reward_block_hash: null,
-          miner_reward: matchingDetail.miner_reward || '0',
-        };
-      }
-
-      return []; // don't include, if reward_block_hash is not found
+      return {
+        ...block,
+        miner_reward: matchingDetail ? matchingDetail.miner_reward : '0',
+      };
     });
 
     const poolLevelData = {
