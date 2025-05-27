@@ -41,7 +41,7 @@ export async function getBlocks() {
 			params: { query },
 		});
 		const data = response.data;
-		const results = data.data?.result
+		const results = data.data?.result;
 
 		let block_details : block_detail[] = [];
 		if (results && results.length > 0) {

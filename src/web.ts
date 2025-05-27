@@ -158,16 +158,11 @@ app.get('/api/nacho_payments/:wallet_address', async (req, res) => {
 app.get('/api/blockdetails', async (req, res) => {
   try {
     const currentPage = req.query.currentPage ? parseInt(req.query.currentPage as string) : 1;
-    const perPage = req.query.perPage ? parseInt(req.query.perPage as string) : 10;
+    const perPage = req.query.perPage ? parseInt(req.query.perPage as string) : 100;
 
     const blockdetails = await getBlockDetails(currentPage, perPage);
 
-    let totalCount: number | undefined;
-    if (currentPage && perPage) {
-      // Get total count only when pagination is applied
-      totalCount = await getBlockCount();
-    }
-
+    const totalCount = await getBlockCount();
     res.status(200).json({
       data: blockdetails,
       pagination: {
