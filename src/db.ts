@@ -39,13 +39,37 @@ export async function getBalances(column: string) {
   }
 }
 
-export async function getBlockDetails() {
+export async function getBlockDetails(currentPage?: number | null, perPage?: number | null) {
   const client = await pool.connect();
   console.log(`DB: getting block details`);
+
   try {
-    const res = await client.query('SELECT mined_block_hash, miner_id, pool_address, reward_block_hash, wallet, daa_score, miner_reward, timestamp FROM block_details');
-    console.log("Res.rows ", res.rows)
+    let query = `
+      SELECT mined_block_hash, miner_id, pool_address, reward_block_hash, wallet, daa_score, miner_reward, timestamp
+      FROM block_details
+      ORDER BY timestamp DESC
+    `;
+    let values: any[] = [];
+
+    // Apply pagination only if both values are provided and are valid numbers
+    if (currentPage != null && perPage != null && currentPage > 0 && perPage > 0) {
+      const offset = (currentPage - 1) * perPage;
+      query += ' LIMIT $1 OFFSET $2';
+      values = [perPage, offset];
+    }
+
+    const res = await client.query(query, values);
     return res.rows;
+  } finally {
+    client.release();
+  }
+}
+
+export async function getBlockCount() {
+  const client = await pool.connect();
+  try {
+    const res = await client.query('SELECT COUNT(*) FROM block_details');
+    return res.rows[0]?.count;
   } finally {
     client.release();
   }

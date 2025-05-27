@@ -42,6 +42,7 @@ export async function getBlocks() {
 		});
 		const data = response.data;
 		const results = data.data?.result;
+
 		let block_details : block_detail[] = [];
 		if (results && results.length > 0) {
 			results.forEach((result: any) => {

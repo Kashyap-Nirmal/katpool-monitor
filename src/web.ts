@@ -1,7 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { getBalances, getTotals, getPaymentsByWallet, getPayments, getBlockDetails, getBalanceByWallet, getKASPayoutForLast48H, getNachoPaymentsGroupedByWallet, getTotalKASPayoutForLast24H } from './db'; // Import the new function
+import { getBalances, getTotals, getPaymentsByWallet, getPayments, getBlockDetails, getBalanceByWallet, getKASPayoutForLast48H, getNachoPaymentsGroupedByWallet, getTotalKASPayoutForLast24H, getBlockCount } from './db'; // Import the new function
 import { getCurrentPoolHashRate, getBlocks, getLastBlockDetails } from './prom';
 import *  as constants from './constants';
 
@@ -79,21 +79,21 @@ app.get('/api/miningPoolStats', async (req, res) => {
         miner_reward: matchingDetail ? matchingDetail.miner_reward : '0',
       };
     });
-    
+
     const poolLevelData = {
-      coin_mined : constants.coin_mined,
-      pool_name : constants.pool_name,
+      coin_mined: constants.coin_mined,
+      pool_name: constants.pool_name,
       url,
       poolFee,
       current_hashRate,
       blocks: blocksWithRewards,
-      advertise_image_link : constants.advertise_image_link,
+      advertise_image_link: constants.advertise_image_link,
       minPay,
-      country : constants.country,
-      feeType : constants.feeType,
+      country: constants.country,
+      feeType: constants.feeType,
       lastblock,
       lastblocktime
-    } 
+    }
     res.status(200).send(poolLevelData)
   } catch (err) {
     console.error(err);
@@ -102,7 +102,7 @@ app.get('/api/miningPoolStats', async (req, res) => {
 })
 
 app.get('/api/pool/payouts', async (req, res) => {
-  try{
+  try {
     const payments = await getPayments('payments');
     res.status(200).json(payments)
   } catch (err) {
@@ -112,7 +112,7 @@ app.get('/api/pool/payouts', async (req, res) => {
 })
 
 app.get('/api/pool/48hKASpayouts', async (req, res) => {
-  try{
+  try {
     const payments = await getKASPayoutForLast48H();
     res.status(200).json(payments)
   } catch (err) {
@@ -134,7 +134,7 @@ app.get('/api/payments/:wallet_address', async (req, res) => {
 });
 
 app.get('/api/pool/nacho_payouts', async (req, res) => {
-  try{
+  try {
     const payments = await getPayments('nacho_payments');
     res.status(200).json(payments)
   } catch (err) {
@@ -156,14 +156,28 @@ app.get('/api/nacho_payments/:wallet_address', async (req, res) => {
 });
 
 app.get('/api/blockdetails', async (req, res) => {
-  try{
-    const blockdetails = await getBlockDetails();
-    res.status(200).json(blockdetails)
+  try {
+    const currentPage = req.query.currentPage ? parseInt(req.query.currentPage as string) : 1;
+    const perPage = req.query.perPage ? parseInt(req.query.perPage as string) : 100;
+
+    const blockdetails = await getBlockDetails(currentPage, perPage);
+
+    const totalCount = await getBlockCount();
+    res.status(200).json({
+      data: blockdetails,
+      pagination: {
+        currentPage,
+        perPage,
+        totalCount,
+        totalPages: totalCount ? Math.ceil(totalCount / perPage) : undefined,
+      },
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).send('Error retrieving blockdetails')
+    res.status(500).send('Error retrieving blockdetails');
   }
-})
+});
+
 
 app.get('/api/pool/48hNACHOPayouts', async (req, res) => {
   try {
@@ -180,7 +194,7 @@ app.get('/api/pool/48hNACHOPayouts', async (req, res) => {
 });
 
 app.get('/api/pool/24hTotalKASPayouts', async (req, res) => {
-  try{
+  try {
     const payments = await getTotalKASPayoutForLast24H();
     res.status(200).json(payments)
   } catch (err) {
