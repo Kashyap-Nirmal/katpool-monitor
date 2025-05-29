@@ -2,7 +2,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { getBalances, getTotals, getPaymentsByWallet, getPayments, getBlockDetails, getBalanceByWallet, getKASPayoutForLast48H, getNachoPaymentsGroupedByWallet, getTotalKASPayoutForLast24H, getBlockCount } from './db'; // Import the new function
-import { getCurrentPoolHashRate, getBlocks, getLastBlockDetails } from './prom';
+import { getCurrentPoolHashRate } from './prom';
 import *  as constants from './constants';
 
 const app = express();
@@ -55,30 +55,16 @@ app.get('/api/miningPoolStats', async (req, res) => {
     }
 
     const current_hashRate = await getCurrentPoolHashRate();
-    blocks = await getBlocks();
-    lastBlockDetails = await getLastBlockDetails()
+    blocks = await getBlockDetails();
+    [lastBlockDetails] = await getBlockDetails(1, 1);
 
     if (lastBlockDetails) {
-      lastblock = lastBlockDetails.lastblock
-      lastblocktime = lastBlockDetails.lastblocktime
+      lastblock = lastBlockDetails.mined_block_hash
+      lastblocktime = lastBlockDetails.timestamp
     }
     url = url || constants.pool_url;
     poolFee = poolFee || constants.pool_fee;
     advertise_image = advertise_image || constants.advertise_image_link; 
-
-    // Add miner_reward to each block
-    const blockdetails = await getBlockDetails();
-    const blocksWithRewards = (blocks || []).map(block => {
-      const matchingDetail = blockdetails.find(
-        (detail: { mined_block_hash: string; miner_reward: string }) =>
-          detail.mined_block_hash === block.block_hash
-      );
-
-      return {
-        ...block,
-        miner_reward: matchingDetail ? matchingDetail.miner_reward : '0',
-      };
-    });
 
     const poolLevelData = {
       coin_mined: constants.coin_mined,
@@ -86,7 +72,7 @@ app.get('/api/miningPoolStats', async (req, res) => {
       url,
       poolFee,
       current_hashRate,
-      blocks: blocksWithRewards,
+      blocks,
       advertise_image_link: constants.advertise_image_link,
       minPay,
       country: constants.country,
