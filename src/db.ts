@@ -6,7 +6,7 @@ dotenv.config();
 
 // Check if DATABASE_URL is configured
 if (!process.env.DATABASE_URL) {
-  console.error("DB: Error - DATABASE_URL environment variable is not set.");
+  console.error('DB: Error - DATABASE_URL environment variable is not set.');
   process.exit(1);
 }
 
@@ -20,10 +20,12 @@ export async function getBalances(column: string) {
   const client = await pool.connect();
   console.log(`DB: getting balances`);
   try {
-    const res = await client.query(`SELECT miner_id, wallet, ${column} as balance FROM miners_balance`);
+    const res = await client.query(
+      `SELECT miner_id, wallet, ${column} as balance FROM miners_balance`
+    );
     const balances: Record<string, Record<string, Decimal>> = {};
 
-    res.rows.forEach(row => {
+    res.rows.forEach((row) => {
       const wallet = row.wallet;
       const miner_id = row.miner_id;
       const balance = new Decimal(row.balance);
@@ -82,7 +84,7 @@ export async function getTotals() {
     const res = await client.query('SELECT address, total FROM wallet_total');
     const totals: Record<string, Decimal> = {};
 
-    res.rows.forEach(row => {
+    res.rows.forEach((row) => {
       const address = row.address;
       const total = new Decimal(row.total);
       totals[address] = total;
@@ -96,18 +98,22 @@ export async function getTotals() {
 
 export async function getPayments(tableName: string) {
   const client = await pool.connect();
-  let amount = (tableName == 'nacho_payments') ? 'nacho_amount' : 'amount';
+  const amount = tableName == 'nacho_payments' ? 'nacho_amount' : 'amount';
   try {
     let res;
     if (tableName == 'payments') {
-      res = await client.query(`SELECT ARRAY['']::text[] AS wallet_address, SUM(${amount}) AS ${amount}, MAX(timestamp) AS timestamp, transaction_hash FROM ${tableName} GROUP BY transaction_hash ORDER BY timestamp DESC LIMIT 500`);
+      res = await client.query(
+        `SELECT ARRAY['']::text[] AS wallet_address, SUM(${amount}) AS ${amount}, MAX(timestamp) AS timestamp, transaction_hash FROM ${tableName} GROUP BY transaction_hash ORDER BY timestamp DESC LIMIT 500`
+      );
     } else {
-      res = await client.query(`SELECT wallet_address, ${amount}, timestamp, transaction_hash FROM ${tableName} ORDER BY timestamp DESC LIMIT 500`);
+      res = await client.query(
+        `SELECT wallet_address, ${amount}, timestamp, transaction_hash FROM ${tableName} ORDER BY timestamp DESC LIMIT 500`
+      );
     }
 
-    return res.rows
+    return res.rows;
   } finally {
-    client.release()
+    client.release();
   }
 }
 
@@ -116,7 +122,10 @@ export async function getPaymentsByWallet(walletAddress: string, tableName: stri
   const client = await pool.connect();
   console.log(`DB: getting payments for wallet_address: ${walletAddress}`);
   try {
-    const res = await client.query(`SELECT * FROM ${tableName} WHERE $1 = ANY(wallet_address) ORDER BY timestamp DESC`, [walletAddress]);
+    const res = await client.query(
+      `SELECT * FROM ${tableName} WHERE $1 = ANY(wallet_address) ORDER BY timestamp DESC`,
+      [walletAddress]
+    );
     return res.rows;
   } finally {
     client.release();
@@ -127,7 +136,9 @@ export async function getPaymentsByWallet(walletAddress: string, tableName: stri
 export async function getKASPayoutForLast48H() {
   const client = await pool.connect();
   try {
-    const res = await client.query(`SELECT wallet_address, SUM(amount) AS amount, MIN(timeStamp) as timeStamp FROM payments WHERE timestamp >= NOW() - INTERVAL '48 hours' GROUP BY wallet_address ORDER BY amount DESC;`);
+    const res = await client.query(
+      `SELECT wallet_address, SUM(amount) AS amount, MIN(timeStamp) as timeStamp FROM payments WHERE timestamp >= NOW() - INTERVAL '48 hours' GROUP BY wallet_address ORDER BY amount DESC;`
+    );
     return res.rows;
   } finally {
     client.release();
@@ -180,12 +191,12 @@ export async function getBalanceByWallet(wallet: string, tableName: string) {
     const res = await client.query(`SELECT * FROM ${tableName} WHERE wallet = $1`, [wallet]);
     const balances: Record<string, Record<string, [Decimal, Decimal]>> = {};
 
-    res.rows.forEach(row => {
+    res.rows.forEach((row) => {
       const wallet = row.wallet;
       const miner_id = row.miner_id;
       const balance = new Decimal(row.balance);
       const nacho_rebate_kas = new Decimal(row.nacho_rebate_kas);
-      
+
       if (!balances[wallet]) {
         balances[wallet] = {};
       }

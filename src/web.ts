@@ -1,9 +1,20 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { getBalances, getTotals, getPaymentsByWallet, getPayments, getBlockDetails, getBalanceByWallet, getKASPayoutForLast48H, getNachoPaymentsGroupedByWallet, getTotalKASPayoutForLast24H, getBlockCount } from './db';
+import {
+  getBalances,
+  getTotals,
+  getPaymentsByWallet,
+  getPayments,
+  getBlockDetails,
+  getBalanceByWallet,
+  getKASPayoutForLast48H,
+  getNachoPaymentsGroupedByWallet,
+  getTotalKASPayoutForLast24H,
+  getBlockCount,
+} from './db';
 import { getCurrentPoolHashRate } from './prom';
-import *  as constants from './constants';
+import * as constants from './constants';
 import { apiLimiter } from './utils';
 
 const app = express();
@@ -51,7 +62,7 @@ app.get('/api/miningPoolStats', async (req, res) => {
     let poolFee, url, advertise_image, minPay, blocks, lastBlockDetails, lastblock, lastblocktime;
     if (fs.existsSync(configPath)) {
       const configData = fs.readFileSync(configPath, 'utf-8');
-      const configJson = JSON.parse(configData)
+      const configJson = JSON.parse(configData);
       poolFee = configJson?.treasury?.fee;
       url = configJson?.hostname;
       advertise_image = configJson?.advertise_image_link;
@@ -63,12 +74,12 @@ app.get('/api/miningPoolStats', async (req, res) => {
     [lastBlockDetails] = await getBlockDetails(1, 1);
 
     if (lastBlockDetails) {
-      lastblock = lastBlockDetails.mined_block_hash
-      lastblocktime = lastBlockDetails.timestamp
+      lastblock = lastBlockDetails.mined_block_hash;
+      lastblocktime = lastBlockDetails.timestamp;
     }
     url = url || constants.pool_url;
     poolFee = poolFee || constants.pool_fee;
-    advertise_image = advertise_image || constants.advertise_image_link; 
+    advertise_image = advertise_image || constants.advertise_image_link;
 
     const poolLevelData = {
       coin_mined: constants.coin_mined,
@@ -82,34 +93,34 @@ app.get('/api/miningPoolStats', async (req, res) => {
       country: constants.country,
       feeType: constants.feeType,
       lastblock,
-      lastblocktime
-    }
-    res.status(200).send(poolLevelData)
+      lastblocktime,
+    };
+    res.status(200).send(poolLevelData);
   } catch (err) {
     console.error(err);
-    res.status(500).send('Error retrieving mining pool stats')
+    res.status(500).send('Error retrieving mining pool stats');
   }
-})
+});
 
 app.get('/api/pool/payouts', async (req, res) => {
   try {
     const payments = await getPayments('payments');
-    res.status(200).json(payments)
+    res.status(200).json(payments);
   } catch (err) {
     console.error(err);
-    res.status(500).send('Error retrieving payments')
+    res.status(500).send('Error retrieving payments');
   }
-})
+});
 
 app.get('/api/pool/48hKASpayouts', async (req, res) => {
   try {
     const payments = await getKASPayoutForLast48H();
-    res.status(200).json(payments)
+    res.status(200).json(payments);
   } catch (err) {
     console.error(err);
-    res.status(500).send('Error retrieving 48H KAS payments for Top miners')
+    res.status(500).send('Error retrieving 48H KAS payments for Top miners');
   }
-})
+});
 
 // New API endpoint to retrieve payments by wallet_address
 app.get('/api/payments/:wallet_address', async (req, res) => {
@@ -126,12 +137,12 @@ app.get('/api/payments/:wallet_address', async (req, res) => {
 app.get('/api/pool/nacho_payouts', async (req, res) => {
   try {
     const payments = await getPayments('nacho_payments');
-    res.status(200).json(payments)
+    res.status(200).json(payments);
   } catch (err) {
     console.error(err);
-    res.status(500).send('Error retrieving payments')
+    res.status(500).send('Error retrieving payments');
   }
-})
+});
 
 // New API endpoint to retrieve payments by wallet_address
 app.get('/api/nacho_payments/:wallet_address', async (req, res) => {
@@ -168,14 +179,19 @@ app.get('/api/blockdetails', async (req, res) => {
   }
 });
 
-
 app.get('/api/pool/48hNACHOPayouts', async (req, res) => {
   try {
     const nacho_payments = await getNachoPaymentsGroupedByWallet();
-    const formatted = nacho_payments.reduce((acc: { [key: string]: number }, item: { wallet_address: string, total_nacho_payment_amount: string }) => {
-      acc[item.wallet_address] = Number(item.total_nacho_payment_amount);
-      return acc;
-    }, {});
+    const formatted = nacho_payments.reduce(
+      (
+        acc: { [key: string]: number },
+        item: { wallet_address: string; total_nacho_payment_amount: string }
+      ) => {
+        acc[item.wallet_address] = Number(item.total_nacho_payment_amount);
+        return acc;
+      },
+      {}
+    );
     res.status(200).json(formatted);
   } catch (err) {
     console.error(err);
@@ -186,12 +202,12 @@ app.get('/api/pool/48hNACHOPayouts', async (req, res) => {
 app.get('/api/pool/24hTotalKASPayouts', async (req, res) => {
   try {
     const payments = await getTotalKASPayoutForLast24H();
-    res.status(200).json(payments)
+    res.status(200).json(payments);
   } catch (err) {
     console.error(err);
-    res.status(500).send('Error retrieving getTotalKASPayoutForLast24H')
+    res.status(500).send('Error retrieving getTotalKASPayoutForLast24H');
   }
-})
+});
 
 // Start the server
 export function startServer() {

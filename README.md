@@ -1,4 +1,4 @@
-# katpool-monitor 
+# katpool-monitor
 
 To install dependencies:
 
@@ -15,7 +15,9 @@ bun run src/index.ts
 This project was created using `bun init` in bun v1.1.20. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
 
 ### Create env variables
+
 create .env file
+
 ```
 POSTGRES_USER=<db-user>
 POSTGRES_PASSWORD=<db-passwd>
