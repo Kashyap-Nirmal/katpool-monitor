@@ -1,12 +1,16 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { getBalances, getTotals, getPaymentsByWallet, getPayments, getBlockDetails, getBalanceByWallet, getKASPayoutForLast48H, getNachoPaymentsGroupedByWallet, getTotalKASPayoutForLast24H, getBlockCount } from './db'; // Import the new function
+import { getBalances, getTotals, getPaymentsByWallet, getPayments, getBlockDetails, getBalanceByWallet, getKASPayoutForLast48H, getNachoPaymentsGroupedByWallet, getTotalKASPayoutForLast24H, getBlockCount } from './db';
 import { getCurrentPoolHashRate } from './prom';
 import *  as constants from './constants';
+import { apiLimiter } from './utils';
 
 const app = express();
 const port = 9301;
+
+// Apply rate limiting to all routes
+app.use(apiLimiter);
 
 // Existing API endpoints
 app.get('/balance', async (req, res) => {
