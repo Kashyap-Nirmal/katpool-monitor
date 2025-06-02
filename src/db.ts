@@ -1,6 +1,16 @@
 import { Pool } from 'pg';
 import { Decimal } from 'decimal.js';
 import dotenv from 'dotenv';
+import {
+  BlockDetail,
+  TotalResponse,
+  Payment,
+  NachoPayment,
+  KASPayout48H,
+  BalanceByWalletResponse,
+  NachoPaymentGrouped,
+  BalancesResponse,
+} from './types';
 
 dotenv.config();
 
@@ -16,7 +26,7 @@ const pool = new Pool({
 
 console.log(`DB: Connecting DB`);
 
-export async function getBalances(column: string) {
+export async function getBalances(column: string): Promise<BalancesResponse> {
   const client = await pool.connect();
   console.log(`DB: getting balances`);
   try {
@@ -41,7 +51,10 @@ export async function getBalances(column: string) {
   }
 }
 
-export async function getBlockDetails(currentPage?: number | null, perPage?: number | null) {
+export async function getBlockDetails(
+  currentPage?: number | null,
+  perPage?: number | null
+): Promise<BlockDetail[]> {
   const client = await pool.connect();
   console.log(`DB: getting block details`);
 
@@ -67,7 +80,7 @@ export async function getBlockDetails(currentPage?: number | null, perPage?: num
   }
 }
 
-export async function getBlockCount() {
+export async function getBlockCount(): Promise<number> {
   const client = await pool.connect();
   try {
     const res = await client.query('SELECT COUNT(*) FROM block_details');
@@ -77,7 +90,7 @@ export async function getBlockCount() {
   }
 }
 
-export async function getTotals() {
+export async function getTotals(): Promise<TotalResponse> {
   const client = await pool.connect();
   console.log(`DB: getting totals`);
   try {
@@ -96,7 +109,7 @@ export async function getTotals() {
   }
 }
 
-export async function getPayments(tableName: string) {
+export async function getPayments(tableName: string): Promise<Payment[] | NachoPayment[]> {
   const client = await pool.connect();
   const amount = tableName == 'nacho_payments' ? 'nacho_amount' : 'amount';
   try {
@@ -133,7 +146,7 @@ export async function getPaymentsByWallet(walletAddress: string, tableName: stri
 }
 
 // New function to retrieve KAS payments by wallet_address for 48H
-export async function getKASPayoutForLast48H() {
+export async function getKASPayoutForLast48H(): Promise<KASPayout48H[]> {
   const client = await pool.connect();
   try {
     const res = await client.query(
@@ -146,7 +159,7 @@ export async function getKASPayoutForLast48H() {
 }
 
 // Function to retrieve total KAS payouts for all wallets in the last 24 hours
-export async function getTotalKASPayoutForLast24H() {
+export async function getTotalKASPayoutForLast24H(): Promise<number> {
   const client = await pool.connect();
   try {
     const res = await client.query(`
@@ -162,7 +175,7 @@ export async function getTotalKASPayoutForLast24H() {
 }
 
 // Retrieve nacho payments grouped by wallet_address
-export async function getNachoPaymentsGroupedByWallet() {
+export async function getNachoPaymentsGroupedByWallet(): Promise<NachoPaymentGrouped[]> {
   const client = await pool.connect();
   console.log(`DB: getting top miners`);
   try {
@@ -184,12 +197,15 @@ export async function getNachoPaymentsGroupedByWallet() {
 }
 
 // New function to retrieve Balance by wallet_address
-export async function getBalanceByWallet(wallet: string, tableName: string) {
+export async function getBalanceByWallet(
+  wallet: string,
+  tableName: string
+): Promise<BalanceByWalletResponse> {
   const client = await pool.connect();
   console.log(`DB: getting Balance for wallet_address: ${wallet}`);
   try {
     const res = await client.query(`SELECT * FROM ${tableName} WHERE wallet = $1`, [wallet]);
-    const balances: Record<string, Record<string, [Decimal, Decimal]>> = {};
+    const balances: BalanceByWallet = {};
 
     res.rows.forEach((row) => {
       const wallet = row.wallet;
