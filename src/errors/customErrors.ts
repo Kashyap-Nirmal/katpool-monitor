@@ -2,7 +2,7 @@ import { AppError } from '../middleware/errorHandler';
 
 export class DatabaseError extends Error implements AppError {
   statusCode: number;
-  
+
   constructor(message: string) {
     super(message);
     this.name = 'DatabaseError';
@@ -12,7 +12,7 @@ export class DatabaseError extends Error implements AppError {
 
 export class NotFoundError extends Error implements AppError {
   statusCode: number;
-  
+
   constructor(message: string) {
     super(message);
     this.name = 'NotFoundError';
@@ -22,7 +22,7 @@ export class NotFoundError extends Error implements AppError {
 
 export class ValidationError extends Error implements AppError {
   statusCode: number;
-  
+
   constructor(message: string) {
     super(message);
     this.name = 'ValidationError';
@@ -32,10 +32,10 @@ export class ValidationError extends Error implements AppError {
 
 export class ConfigError extends Error implements AppError {
   statusCode: number;
-  
+
   constructor(message: string) {
     super(message);
     this.name = 'ConfigError';
     this.statusCode = 500;
   }
-} 
+}

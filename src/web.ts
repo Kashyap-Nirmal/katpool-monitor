@@ -18,6 +18,7 @@ import * as constants from './constants';
 import { apiLimiter } from './utils';
 import { errorHandler, asyncHandler } from './middleware/errorHandler';
 import { DatabaseError, NotFoundError, ConfigError } from './errors/customErrors';
+import logger from './logger';
 
 const app = express();
 const port = 9301;
@@ -78,7 +79,7 @@ app.get(
   asyncHandler(async (req, res) => {
     const configPath = path.resolve('./config/received_config.json');
     let poolFee, url, minPay, lastblock, lastblocktime;
-    
+
     if (fs.existsSync(configPath)) {
       const configData = fs.readFileSync(configPath, 'utf-8');
       const configJson = JSON.parse(configData);
@@ -206,16 +207,10 @@ app.get(
     if (!nacho_payments) {
       throw new DatabaseError('Failed to retrieve 48h NACHO payouts');
     }
-    const formatted = nacho_payments.reduce(
-      (
-        acc: { [key: string]: number },
-        item: { wallet_address: string; total_nacho_payment_amount: string }
-      ) => {
-        acc[item.wallet_address] = Number(item.total_nacho_payment_amount);
-        return acc;
-      },
-      {}
-    );
+    const formatted = nacho_payments.reduce<{ [key: string]: number }>((acc, item) => {
+      acc[item.wallet_address] = item.total_nacho_payment_amount;
+      return acc;
+    }, {});
     res.status(200).json(formatted);
   })
 );
@@ -237,19 +232,19 @@ app.use(errorHandler);
 // Start the server
 export function startServer() {
   const server = app.listen(port, () => {
-    console.log(`API Server running at http://localhost:${port}`);
+    logger.info(`API Server running at http://localhost:${port}`);
   });
 
   // Handle unhandled promise rejections
   process.on('unhandledRejection', (err: Error) => {
-    console.error('Unhandled Promise Rejection:', err);
+    logger.error('Unhandled Promise Rejection:', err);
     // Close server & exit process
     server.close(() => process.exit(1));
   });
 
   // Handle uncaught exceptions
   process.on('uncaughtException', (err: Error) => {
-    console.error('Uncaught Exception:', err);
+    logger.error('Uncaught Exception:', err);
     // Close server & exit process
     server.close(() => process.exit(1));
   });

@@ -1,6 +1,7 @@
 import { Pool } from 'pg';
 import { Decimal } from 'decimal.js';
 import dotenv from 'dotenv';
+import logger from './logger/index';
 import {
   BlockDetail,
   TotalResponse,
@@ -16,7 +17,7 @@ dotenv.config();
 
 // Check if DATABASE_URL is configured
 if (!process.env.DATABASE_URL) {
-  console.error('DB: Error - DATABASE_URL environment variable is not set.');
+  logger.error('DB: Error - DATABASE_URL environment variable is not set.');
   process.exit(1);
 }
 
@@ -24,11 +25,11 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-console.log(`DB: Connecting DB`);
+logger.info('DB: Connecting DB');
 
 export async function getBalances(column: string): Promise<BalancesResponse> {
   const client = await pool.connect();
-  console.log(`DB: getting balances`);
+  logger.info('DB: getting balances');
   try {
     const res = await client.query(
       `SELECT miner_id, wallet, ${column} as balance FROM miners_balance`
@@ -56,7 +57,7 @@ export async function getBlockDetails(
   perPage?: number | null
 ): Promise<BlockDetail[]> {
   const client = await pool.connect();
-  console.log(`DB: getting block details`);
+  logger.info('DB: getting block details');
 
   try {
     let query = `
@@ -92,7 +93,7 @@ export async function getBlockCount(): Promise<number> {
 
 export async function getTotals(): Promise<TotalResponse> {
   const client = await pool.connect();
-  console.log(`DB: getting totals`);
+  logger.info('DB: getting totals');
   try {
     const res = await client.query('SELECT address, total FROM wallet_total');
     const totals: Record<string, Decimal> = {};
@@ -133,7 +134,7 @@ export async function getPayments(tableName: string): Promise<Payment[] | NachoP
 // New function to retrieve payments by wallet_address
 export async function getPaymentsByWallet(walletAddress: string, tableName: string) {
   const client = await pool.connect();
-  console.log(`DB: getting payments for wallet_address: ${walletAddress}`);
+  logger.info(`DB: getting payments for wallet_address: ${walletAddress}`);
   try {
     const res = await client.query(
       `SELECT * FROM ${tableName} WHERE $1 = ANY(wallet_address) ORDER BY timestamp DESC`,
@@ -177,7 +178,7 @@ export async function getTotalKASPayoutForLast24H(): Promise<number> {
 // Retrieve nacho payments grouped by wallet_address
 export async function getNachoPaymentsGroupedByWallet(): Promise<NachoPaymentGrouped[]> {
   const client = await pool.connect();
-  console.log(`DB: getting top miners`);
+  logger.info('DB: getting top miners');
   try {
     // Query SQL for payments and nacho totals
     const result = await client.query(`
@@ -202,10 +203,10 @@ export async function getBalanceByWallet(
   tableName: string
 ): Promise<BalanceByWalletResponse> {
   const client = await pool.connect();
-  console.log(`DB: getting Balance for wallet_address: ${wallet}`);
+  logger.info(`DB: getting Balance for wallet_address: ${wallet}`);
   try {
     const res = await client.query(`SELECT * FROM ${tableName} WHERE wallet = $1`, [wallet]);
-    const balances: BalanceByWallet = {};
+    const balances: BalanceByWalletResponse = {};
 
     res.rows.forEach((row) => {
       const wallet = row.wallet;
