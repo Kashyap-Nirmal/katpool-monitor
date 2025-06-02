@@ -13,7 +13,7 @@ import {
   getTotalKASPayoutForLast24H,
   getBlockCount,
 } from './db';
-import { getCurrentPoolHashRate } from './prom';
+import { getCurrentPoolHashRate } from './utils';
 import * as constants from './constants';
 import { apiLimiter } from './utils';
 
@@ -59,19 +59,20 @@ app.get('/config', (req, res) => {
 app.get('/api/miningPoolStats', async (req, res) => {
   try {
     const configPath = path.resolve('./config/received_config.json');
-    let poolFee, url, advertise_image, minPay, blocks, lastBlockDetails, lastblock, lastblocktime;
+    let poolFee, url, minPay, lastblock, lastblocktime;
     if (fs.existsSync(configPath)) {
       const configData = fs.readFileSync(configPath, 'utf-8');
       const configJson = JSON.parse(configData);
       poolFee = configJson?.treasury?.fee;
       url = configJson?.hostname;
-      advertise_image = configJson?.advertise_image_link;
-      minPay = configJson?.thresholdAmount! / constants.KAStoSompi;
+      minPay = configJson?.thresholdAmount
+        ? configJson.thresholdAmount / constants.KAStoSompi
+        : undefined;
     }
 
     const current_hashRate = await getCurrentPoolHashRate();
-    blocks = await getBlockDetails();
-    [lastBlockDetails] = await getBlockDetails(1, 1);
+    const blocks = await getBlockDetails();
+    const [lastBlockDetails] = await getBlockDetails(1, 1);
 
     if (lastBlockDetails) {
       lastblock = lastBlockDetails.mined_block_hash;
@@ -79,7 +80,6 @@ app.get('/api/miningPoolStats', async (req, res) => {
     }
     url = url || constants.pool_url;
     poolFee = poolFee || constants.pool_fee;
-    advertise_image = advertise_image || constants.advertise_image_link;
 
     const poolLevelData = {
       coin_mined: constants.coin_mined,
