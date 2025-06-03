@@ -19,12 +19,48 @@ import { apiLimiter } from './utils';
 import { errorHandler, asyncHandler } from './middleware/errorHandler';
 import { DatabaseError, NotFoundError, ConfigError } from './errors/customErrors';
 import logger from './logger';
+import rTracer from 'cls-rtracer';
 
 const app = express();
 const port = 9301;
 
+// Apply request context middleware first
+app.use(rTracer.expressMiddleware());
+
 // Apply rate limiting to all routes
 app.use(apiLimiter);
+
+// Add basic middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Add request logging middleware
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.url}`);
+  next();
+});
+
+// Add response logging middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  const originalSend = res.send;
+  let responseBody: unknown;
+
+  res.send = function (body: unknown) {
+    responseBody = body;
+    return originalSend.call(this, body);
+  };
+
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    logger.info(`${req.method} ${req.url} ${res.statusCode} - ${duration}ms`, {
+      ms: duration,
+      statusCode: res.statusCode,
+      response: responseBody,
+    });
+  });
+  next();
+});
 
 // Existing API endpoints
 app.get(

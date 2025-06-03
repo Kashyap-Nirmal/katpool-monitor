@@ -1,5 +1,6 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
+import rTracer from 'cls-rtracer';
 
 dotenv.config();
 
@@ -11,11 +12,13 @@ interface LogContext {
 }
 
 const sendLog = async (level: string, message: string, context: LogContext = {}) => {
+  const requestId: string = String(rTracer.id());
   const logData = {
     ddsource: 'nodejs',
     service: 'katpool-monitor',
     level,
     message,
+    requestId: requestId.toString(),
     ...context,
     timestamp: new Date().toISOString(),
   };
