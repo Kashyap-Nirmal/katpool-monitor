@@ -14,7 +14,7 @@ interface LogContext {
 const sendLog = async (level: string, message: string, context: LogContext = {}) => {
   // backgroud servers startMetricsServer, updateMetrics does not have requestId
   // not all logs will be sent to Datadog, only logs with requestId will be sent
-  const requestId: string = String(rTracer.id());
+  const requestId: string = String(context.requestId || rTracer.id());
   if (requestId && requestId !== 'undefined') {
     const logData = {
       ddsource: 'nodejs',

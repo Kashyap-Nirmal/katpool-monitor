@@ -54,12 +54,14 @@ app.use((req, res, next) => {
     return originalSend.call(this, body);
   };
 
+  const requestId = String(rTracer.id());
   res.on('finish', () => {
     const duration = Date.now() - start;
     logger.info(`${req.method} ${req.url} ${res.statusCode} - ${duration}ms`, {
       ms: duration,
       statusCode: res.statusCode,
       response: responseBody,
+      requestId,
     });
   });
   next();
