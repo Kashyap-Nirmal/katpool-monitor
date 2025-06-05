@@ -217,8 +217,9 @@ app.get(
   })
 );
 
+// TODO: need to change nginx config for this route
 app.get(
-  '/api/blockdetails',
+  '/api/pool/blockdetails',
   asyncHandler(async (req, res) => {
     const currentPage = req.query.currentPage ? parseInt(req.query.currentPage as string) : 1;
     const perPage = req.query.perPage ? parseInt(req.query.perPage as string) : 100;
