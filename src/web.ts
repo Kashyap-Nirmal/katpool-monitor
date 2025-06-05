@@ -20,12 +20,15 @@ import { errorHandler, asyncHandler } from './middleware/errorHandler';
 import { DatabaseError, NotFoundError, ConfigError } from './errors/customErrors';
 import logger from './logger';
 import rTracer from 'cls-rtracer';
+import { requestContextMiddleware } from './middleware/requestContext';
 
 const app = express();
 const port = 9301;
 
 // Apply request context middleware first
 app.use(rTracer.expressMiddleware());
+// This middleware check header x-request-id from frontend and rewrite requestId in rTracer
+app.use(requestContextMiddleware);
 
 // Apply rate limiting to all routes
 app.use(apiLimiter);
