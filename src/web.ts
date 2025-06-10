@@ -60,7 +60,10 @@ app.use((req, res, next) => {
     logger.info(`${req.method} ${req.url} ${res.statusCode} - ${duration}ms`, {
       ms: duration,
       statusCode: res.statusCode,
-      response: responseBody,
+      response:
+        typeof responseBody === 'object' && responseBody !== null
+          ? Object.keys(responseBody)
+          : responseBody,
       requestId,
     });
   });
