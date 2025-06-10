@@ -2,11 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import rTracer from 'cls-rtracer';
 
 export const requestContextMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const requestId: string = String(req.headers['x-request-id']);
-  if (requestId && requestId !== 'undefined') {
+  const traceId: string = String(req.headers['x-trace-id']);
+  if (traceId && traceId !== 'undefined') {
     rTracer.runWithId(() => {
       next();
-    }, requestId);
+    }, traceId);
   } else {
     next();
   }

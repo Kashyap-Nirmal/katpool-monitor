@@ -29,7 +29,7 @@ logger.info('DB: Connecting DB');
 
 export async function getBalances(column: string): Promise<BalancesResponse> {
   const client = await pool.connect();
-  logger.info('DB: getting balances');
+  // logger.info('DB: getting balances');
   try {
     const res = await client.query(
       `SELECT miner_id, wallet, ${column} as balance FROM miners_balance`
@@ -93,7 +93,7 @@ export async function getBlockCount(): Promise<number> {
 
 export async function getTotals(): Promise<TotalResponse> {
   const client = await pool.connect();
-  logger.info('DB: getting totals');
+  // logger.info('DB: getting totals');
   try {
     const res = await client.query('SELECT address, total FROM wallet_total');
     const totals: Record<string, Decimal> = {};

@@ -47,11 +47,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   const start = Date.now();
   const originalSend = res.send;
-  // let responseBody: unknown;
-
   res.send = function (body: unknown) {
-    // TODO: add response body keys or some info needed for debugging
-    // responseBody = body;
     return originalSend.call(this, body);
   };
 
@@ -61,8 +57,7 @@ app.use((req, res, next) => {
     logger.info(`${req.method} ${req.url} ${res.statusCode} - ${duration}ms`, {
       ms: duration,
       statusCode: res.statusCode,
-      requestId,
-      // TODO: add response body keys or some info needed for debugging
+      traceId: requestId,
     });
   });
   next();
@@ -276,20 +271,6 @@ app.use(errorHandler);
 export function startServer() {
   const server = app.listen(port, () => {
     logger.info(`API Server running at http://localhost:${port}`);
-  });
-
-  // Handle unhandled promise rejections
-  process.on('unhandledRejection', (err: Error) => {
-    logger.error('Unhandled Promise Rejection:', err);
-    // Close server & exit process
-    server.close(() => process.exit(1));
-  });
-
-  // Handle uncaught exceptions
-  process.on('uncaughtException', (err: Error) => {
-    logger.error('Uncaught Exception:', err);
-    // Close server & exit process
-    server.close(() => process.exit(1));
   });
 
   return server;
