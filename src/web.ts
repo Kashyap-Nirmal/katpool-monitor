@@ -47,10 +47,11 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   const start = Date.now();
   const originalSend = res.send;
-  let responseBody: unknown;
+  // let responseBody: unknown;
 
   res.send = function (body: unknown) {
-    responseBody = body;
+    // TODO: add response body keys or some info needed for debugging
+    // responseBody = body;
     return originalSend.call(this, body);
   };
 
@@ -60,8 +61,8 @@ app.use((req, res, next) => {
     logger.info(`${req.method} ${req.url} ${res.statusCode} - ${duration}ms`, {
       ms: duration,
       statusCode: res.statusCode,
-      response: responseBody,
       requestId,
+      // TODO: add response body keys or some info needed for debugging
     });
   });
   next();
