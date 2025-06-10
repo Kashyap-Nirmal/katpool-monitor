@@ -15,7 +15,7 @@ import {
 } from './db';
 import { getCurrentPoolHashRate } from './utils';
 import * as constants from './constants';
-import { apiLimiter } from './utils';
+// import { apiLimiter } from './utils';
 import { errorHandler, asyncHandler } from './middleware/errorHandler';
 import { DatabaseError, NotFoundError, ConfigError } from './errors/customErrors';
 import logger from './logger';
@@ -31,7 +31,7 @@ app.use(rTracer.expressMiddleware());
 app.use(requestContextMiddleware);
 
 // Apply rate limiting to all routes
-app.use(apiLimiter);
+// app.use(apiLimiter);
 
 // Add basic middleware
 app.use(express.json());
