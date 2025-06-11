@@ -27,7 +27,7 @@ const port = 9301;
 
 // Apply request context middleware first
 app.use(rTracer.expressMiddleware());
-// This middleware check header x-request-id from frontend and rewrite requestId in rTracer
+// This middleware check header x-trace-id from frontend and rewrite traceId in rTracer
 app.use(requestContextMiddleware);
 
 // Apply rate limiting to all routes
@@ -51,13 +51,13 @@ app.use((req, res, next) => {
     return originalSend.call(this, body);
   };
 
-  const requestId = String(rTracer.id());
+  const traceId = String(rTracer.id());
   res.on('finish', () => {
     const duration = Date.now() - start;
     logger.info(`${req.method} ${req.url} ${res.statusCode} - ${duration}ms`, {
       ms: duration,
       statusCode: res.statusCode,
-      traceId: requestId,
+      traceId: traceId,
     });
   });
   next();
