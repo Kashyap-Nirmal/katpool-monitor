@@ -22,6 +22,9 @@ RUN bun install
 # Copy the rest of your application code to the working directory
 COPY . .
 
+# Generate Prisma client
+RUN bunx prisma generate
+
 # Expose the port your app runs on
 EXPOSE 9300
 EXPOSE 9301
