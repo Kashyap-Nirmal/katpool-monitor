@@ -23,7 +23,7 @@ register.registerMetric(totalGauge);
 export async function updateMetrics() {
   console.log(`Metrics: entering updateMetrics function`);
 
-  const balances = await getBalances('balance');
+  const balances = await getBalances();
   const aggregatedBalances: Record<string, Decimal> = {};
 
   for (const wallet in balances) {

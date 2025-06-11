@@ -67,7 +67,7 @@ app.use((req, res, next) => {
 app.get(
   '/balance',
   asyncHandler(async (req, res) => {
-    const balances = await getBalances('balance');
+    const balances = await getBalances();
     if (!balances) {
       throw new DatabaseError('Failed to retrieve balances');
     }
@@ -80,7 +80,7 @@ app.get(
   '/balance/:wallet_address',
   asyncHandler(async (req, res) => {
     const walletAddress = req.params.wallet_address;
-    const balances = await getBalanceByWallet(walletAddress, 'miners_balance');
+    const balances = await getBalanceByWallet(walletAddress);
     if (!balances) {
       throw new NotFoundError(`No balance found for wallet: ${walletAddress}`);
     }
@@ -257,7 +257,7 @@ app.get(
   '/api/pool/24hTotalKASPayouts',
   asyncHandler(async (req, res) => {
     const payments = await getTotalKASPayoutForLast24H();
-    if (!payments) {
+    if (payments > 0) {
       throw new DatabaseError('Failed to retrieve 24h total KAS payouts');
     }
     res.status(200).json(payments);
