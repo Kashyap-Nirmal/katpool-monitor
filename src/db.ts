@@ -25,7 +25,7 @@ const prisma = new PrismaClient();
 logger.info('DB: Connecting DB');
 
 export async function getBalances(): Promise<BalancesResponse> {
-  logger.info('DB: getting balances');
+  // logger.info('DB: getting balances');
   try {
     const balances: Record<string, Record<string, Decimal>> = {};
     const miners = await prisma.miners_balance.findMany({
@@ -36,7 +36,7 @@ export async function getBalances(): Promise<BalancesResponse> {
       },
     });
 
-    miners.forEach((row) => {
+    miners.forEach((row: any) => {
       if (row.wallet && row.miner_id) {
         const wallet = row.wallet;
         const miner_id = row.miner_id;
@@ -104,7 +104,7 @@ export async function getBlockCount(): Promise<number> {
 }
 
 export async function getTotals(): Promise<TotalResponse> {
-  logger.info('DB: getting totals');
+  // logger.info('DB: getting totals');
   try {
     const totals: Record<string, Decimal> = {};
     const walletTotals = await prisma.wallet_total.findMany({
