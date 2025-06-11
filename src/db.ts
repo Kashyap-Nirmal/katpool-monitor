@@ -192,7 +192,10 @@ export async function getPaymentsByWallet(walletAddress: string, tableName: stri
           timestamp: 'desc',
         },
       });
-      return payments;
+      return payments.map((payment) => ({
+        ...payment,
+        amount: Number(payment.amount),
+      }));
     } else {
       const nachoPayments = await prisma.nacho_payments.findMany({
         where: {
@@ -204,7 +207,10 @@ export async function getPaymentsByWallet(walletAddress: string, tableName: stri
           timestamp: 'desc',
         },
       });
-      return nachoPayments;
+      return nachoPayments.map((payment) => ({
+        ...payment,
+        nacho_amount: Number(payment.nacho_amount),
+      }));
     }
   } catch (error: any) {
     logger.error('DB: Error getting payments by wallet', { error: error.message });
