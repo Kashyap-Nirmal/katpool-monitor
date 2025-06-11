@@ -27,7 +27,7 @@ const port = 9301;
 
 // Apply request context middleware first
 app.use(rTracer.expressMiddleware());
-// This middleware check header x-request-id from frontend and rewrite requestId in rTracer
+// This middleware check header x-trace-id from frontend and rewrite traceId in rTracer
 app.use(requestContextMiddleware);
 
 // Apply rate limiting to all routes
@@ -47,22 +47,17 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   const start = Date.now();
   const originalSend = res.send;
-  // let responseBody: unknown;
-
   res.send = function (body: unknown) {
-    // TODO: add response body keys or some info needed for debugging
-    // responseBody = body;
     return originalSend.call(this, body);
   };
 
-  const requestId = String(rTracer.id());
+  const traceId = String(rTracer.id());
   res.on('finish', () => {
     const duration = Date.now() - start;
     logger.info(`${req.method} ${req.url} ${res.statusCode} - ${duration}ms`, {
       ms: duration,
       statusCode: res.statusCode,
-      requestId,
-      // TODO: add response body keys or some info needed for debugging
+      traceId: traceId,
     });
   });
   next();
@@ -72,7 +67,7 @@ app.use((req, res, next) => {
 app.get(
   '/balance',
   asyncHandler(async (req, res) => {
-    const balances = await getBalances('balance');
+    const balances = await getBalances();
     if (!balances) {
       throw new DatabaseError('Failed to retrieve balances');
     }
@@ -85,7 +80,7 @@ app.get(
   '/balance/:wallet_address',
   asyncHandler(async (req, res) => {
     const walletAddress = req.params.wallet_address;
-    const balances = await getBalanceByWallet(walletAddress, 'miners_balance');
+    const balances = await getBalanceByWallet(walletAddress);
     if (!balances) {
       throw new NotFoundError(`No balance found for wallet: ${walletAddress}`);
     }
@@ -262,7 +257,7 @@ app.get(
   '/api/pool/24hTotalKASPayouts',
   asyncHandler(async (req, res) => {
     const payments = await getTotalKASPayoutForLast24H();
-    if (!payments) {
+    if (payments > 0) {
       throw new DatabaseError('Failed to retrieve 24h total KAS payouts');
     }
     res.status(200).json(payments);
@@ -276,20 +271,6 @@ app.use(errorHandler);
 export function startServer() {
   const server = app.listen(port, () => {
     logger.info(`API Server running at http://localhost:${port}`);
-  });
-
-  // Handle unhandled promise rejections
-  process.on('unhandledRejection', (err: Error) => {
-    logger.error('Unhandled Promise Rejection:', err);
-    // Close server & exit process
-    server.close(() => process.exit(1));
-  });
-
-  // Handle uncaught exceptions
-  process.on('uncaughtException', (err: Error) => {
-    logger.error('Uncaught Exception:', err);
-    // Close server & exit process
-    server.close(() => process.exit(1));
   });
 
   return server;

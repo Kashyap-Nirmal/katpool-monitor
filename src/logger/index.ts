@@ -8,7 +8,7 @@ const { DATADOG_SECRET, DATADOG_LOG_URL } = process.env;
 
 interface LogContext {
   [key: string]: any;
-  requestId?: string;
+  traceId?: string;
 }
 
 const baseLogObject = {
@@ -19,17 +19,16 @@ const baseLogObject = {
 
 const sendLog = async (level: string, message: string, context: LogContext = {}) => {
   console.log(level, message, context);
-  // backgroud servers startMetricsServer, updateMetrics does not have requestId
-  // not all logs will be sent to Datadog, only logs with requestId will be sent
-  const requestId: string = String(context.requestId || rTracer.id());
-  if (requestId && requestId !== 'undefined') {
+  const traceId: string = String(context.traceId || rTracer.id());
+  // ignore updateMetrics logs
+  if (traceId != 'updateMetrics') {
     try {
       await axios.post(
         DATADOG_LOG_URL!,
         {
           ...baseLogObject,
           ...context,
-          requestId: requestId.toString(),
+          traceId: traceId.toString(),
           level,
           message,
         },
@@ -49,6 +48,7 @@ const sendLog = async (level: string, message: string, context: LogContext = {})
           level: 'error',
           message: `Failed to send log to Datadog | ${error}`,
           error: error instanceof Error ? error.stack : error,
+          traceId: traceId.toString(),
         },
         {
           headers: {

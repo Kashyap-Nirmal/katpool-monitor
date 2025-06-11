@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model block_details {
+  mined_block_hash  String    @id @db.VarChar(255)
+  miner_id          String?   @db.VarChar(255)
+  pool_address      String?   @db.VarChar(255)
+  wallet            String?   @db.VarChar(255)
+  daa_score         String?   @db.VarChar(255)
+  timestamp         DateTime? @default(now()) @db.Timestamp(6)
+  reward_block_hash String?   @default("") @db.VarChar(255)
+  miner_reward      BigInt    @default(0)
+}
+
+model miners_balance {
+  id               String   @id @db.VarChar(255)
+  miner_id         String?  @db.VarChar(255)
+  wallet           String?  @db.VarChar(255)
+  balance          Decimal? @db.Decimal
+  nacho_rebate_kas Decimal? @default(0) @db.Decimal
+}
+
+model nacho_payments {
+  id               Int       @id @default(autoincrement())
+  wallet_address   String[]
+  nacho_amount     BigInt
+  timestamp        DateTime? @default(now()) @db.Timestamp(6)
+  transaction_hash String    @db.VarChar(255)
+}
+
+model payments {
+  id               Int       @id @default(autoincrement())
+  wallet_address   String[]
+  amount           BigInt
+  timestamp        DateTime? @default(now()) @db.Timestamp(6)
+  transaction_hash String    @db.VarChar(255)
+}
+
+model pending_krc20_transfers {
+  id                    Int          @id @default(autoincrement())
+  first_txn_id          String       @unique @db.VarChar(255)
+  sompi_to_miner        BigInt
+  nacho_amount          BigInt
+  address               String       @db.VarChar(255)
+  p2sh_address          String       @db.VarChar(255)
+  nacho_transfer_status status_enum? @default(PENDING)
+  db_entry_status       status_enum? @default(PENDING)
+  timestamp             DateTime?    @default(now()) @db.Timestamp(6)
+}
+
+model reward_block_details {
+  id                Int    @id @default(autoincrement())
+  reward_block_hash String @unique @db.VarChar(255)
+  reward_txn_id     String @unique @db.VarChar(255)
+}
+
+model wallet_total {
+  address String   @id @db.VarChar(255)
+  total   Decimal? @db.Decimal
+}
+
+enum status_enum {
+  PENDING
+  FAILED
+  COMPLETED
+}
