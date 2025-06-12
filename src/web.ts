@@ -38,8 +38,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Add request logging middleware
-app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.url}`);
+app.use(async (req, res, next) => {
+  await logger.info(`${req.method} ${req.url}`);
   next();
 });
 
@@ -52,9 +52,9 @@ app.use((req, res, next) => {
   };
 
   const traceId = String(rTracer.id());
-  res.on('finish', () => {
+  res.on('finish', async () => {
     const duration = Date.now() - start;
-    logger.info(`${req.method} ${req.url} ${res.statusCode} - ${duration}ms`, {
+    await logger.info(`${req.method} ${req.url} ${res.statusCode} - ${duration}ms`, {
       ms: duration,
       statusCode: res.statusCode,
       traceId: traceId,
@@ -269,8 +269,8 @@ app.use(errorHandler);
 
 // Start the server
 export function startServer() {
-  const server = app.listen(port, () => {
-    logger.info(`API Server running at http://localhost:${port}`);
+  const server = app.listen(port, async () => {
+    await logger.info(`API Server running at http://localhost:${port}`);
   });
 
   return server;
