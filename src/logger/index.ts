@@ -1,4 +1,3 @@
-import axios from 'axios';
 import dotenv from 'dotenv';
 import rTracer from 'cls-rtracer';
 
@@ -19,48 +18,58 @@ const baseLogObject = {
 
 const sendLog = async (level: string, message: string, context: LogContext = {}) => {
   console.log(level, message, context);
+
   const traceId: string = String(context.traceId || rTracer.id());
-  // ignore updateMetrics logs
-  if (traceId == 'updateMetrics') {
+
+  if (traceId === 'updateMetrics') {
     console.log('Ignoring updateMetrics log');
     return;
-  } else {
+  }
+
+  const payload = {
+    ...baseLogObject,
+    ...context,
+    traceId,
+    level,
+    message,
+  };
+
+  try {
+    const response = await fetch(DATADOG_LOG_URL!, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'DD-API-KEY': DATADOG_SECRET!,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      console.error(`Datadog log failed with status ${response.status}`);
+    } else {
+      console.log('Log sent to Datadog successfully');
+    }
+  } catch (error) {
+    console.error(`Failed to send log to Datadog |`, error);
+
+    // Optional: Send fallback log (if safe to do so)
     try {
-      console.log('Sending log to Datadog');
-      await axios.post(
-        DATADOG_LOG_URL!,
-        {
-          ...baseLogObject,
-          ...context,
-          traceId: traceId.toString(),
-          level,
-          message,
+      await fetch(DATADOG_LOG_URL!, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'DD-API-KEY': DATADOG_SECRET!,
         },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'DD-API-KEY': DATADOG_SECRET!,
-          },
-        }
-      );
-    } catch (error) {
-      console.log(`Failed to send log to Datadog | ${error}`);
-      await axios.post(
-        DATADOG_LOG_URL!,
-        {
+        body: JSON.stringify({
           ...baseLogObject,
           level: 'error',
           message: `Failed to send log to Datadog | ${error}`,
           error: error instanceof Error ? error.stack : error,
-          traceId: traceId.toString(),
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'DD-API-KEY': DATADOG_SECRET!,
-          },
-        }
-      );
+          traceId,
+        }),
+      });
+    } catch (fallbackError) {
+      console.error('Also failed to send fallback log to Datadog', fallbackError);
     }
   }
 };
