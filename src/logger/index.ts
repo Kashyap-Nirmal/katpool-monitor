@@ -21,8 +21,12 @@ const sendLog = async (level: string, message: string, context: LogContext = {})
   console.log(level, message, context);
   const traceId: string = String(context.traceId || rTracer.id());
   // ignore updateMetrics logs
-  if (traceId != 'updateMetrics') {
+  if (traceId == 'updateMetrics') {
+    console.log('Ignoring updateMetrics log');
+    return;
+  } else {
     try {
+      console.log('Sending log to Datadog');
       await axios.post(
         DATADOG_LOG_URL!,
         {
@@ -40,7 +44,7 @@ const sendLog = async (level: string, message: string, context: LogContext = {})
         }
       );
     } catch (error) {
-      console.error(`Failed to send log to Datadog | ${error}`);
+      console.log(`Failed to send log to Datadog | ${error}`);
       await axios.post(
         DATADOG_LOG_URL!,
         {
