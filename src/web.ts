@@ -256,10 +256,7 @@ app.get(
 app.get(
   '/api/pool/24hTotalKASPayouts',
   asyncHandler(async (req, res) => {
-    const payments = await getTotalKASPayoutForLast24H();
-    if (payments > 0) {
-      throw new DatabaseError('Failed to retrieve 24h total KAS payouts');
-    }
+    const payments: number = await getTotalKASPayoutForLast24H();
     res.status(200).json(payments);
   })
 );
