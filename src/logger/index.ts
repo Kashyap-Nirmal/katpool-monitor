@@ -10,13 +10,13 @@ interface LogContext {
   traceId?: string;
 }
 
-const baseLogObject = {
-  ddsource: 'nodejs',
-  service: process.env.DATADOG_SERVICE_NAME || 'prod-katpool-monitor',
-  timestamp: new Date().toISOString(),
-};
-
 const sendLog = async (level: string, message: string, context: LogContext = {}) => {
+  const baseLogObject = {
+    ddsource: 'nodejs',
+    service: process.env.DATADOG_SERVICE_NAME || 'prod-katpool-monitor',
+    timestamp: new Date().toISOString(),
+  };
+
   console.log(level, message, context);
 
   const traceId: string = String(context.traceId || rTracer.id());
