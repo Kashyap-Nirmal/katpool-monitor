@@ -21,9 +21,13 @@ import { DatabaseError, NotFoundError, ConfigError } from './errors/customErrors
 import logger from './logger';
 import rTracer from 'cls-rtracer';
 import { requestContextMiddleware } from './middleware/requestContext';
+import healthRouter from './health';
 
-const app = express();
+export const app = express();
 const port = 9301;
+
+// Register the health route
+app.use(healthRouter);
 
 // Apply request context middleware first
 app.use(rTracer.expressMiddleware());
