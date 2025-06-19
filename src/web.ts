@@ -12,6 +12,8 @@ import {
   getNachoPaymentsGroupedByWallet,
   getTotalKASPayoutForLast24H,
   getBlockCount,
+  getTotalPaidKAS,
+  getTotalPaidNACHO,
 } from './db';
 import { getCurrentPoolHashRate } from './utils';
 import * as constants from './constants';
@@ -264,6 +266,22 @@ app.get(
   asyncHandler(async (req, res) => {
     const payments: number = await getTotalKASPayoutForLast24H();
     res.status(200).json(payments);
+  })
+);
+
+app.get(
+  '/api/pool/totalPaidKAS',
+  asyncHandler(async (req, res) => {
+    const totalPaidKAS = await getTotalPaidKAS();
+    res.status(200).json({ totalPaidKAS });
+  })
+);
+
+app.get(
+  '/api/pool/totalPaidNACHO',
+  asyncHandler(async (req, res) => {
+    const totalPaidNACHO = await getTotalPaidNACHO();
+    res.status(200).json({ totalPaidNACHO });
   })
 );
 

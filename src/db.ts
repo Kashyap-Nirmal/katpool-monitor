@@ -340,3 +340,31 @@ export async function getBalanceByWallet(wallet: string): Promise<BalanceByWalle
     throw error;
   }
 }
+
+export async function getTotalPaidKAS(): Promise<number> {
+  try {
+    const result = await prisma.payments.aggregate({
+      _sum: {
+        amount: true,
+      },
+    });
+    return Number(result._sum.amount || 0);
+  } catch (error: any) {
+    logger.error('DB: Error getting total paid KAS', { error: error.message });
+    throw error;
+  }
+}
+
+export async function getTotalPaidNACHO(): Promise<number> {
+  try {
+    const result = await prisma.nacho_payments.aggregate({
+      _sum: {
+        nacho_amount: true,
+      },
+    });
+    return Number(result._sum.nacho_amount || 0);
+  } catch (error: any) {
+    logger.error('DB: Error getting total paid NACHO', { error: error.message });
+    throw error;
+  }
+}
