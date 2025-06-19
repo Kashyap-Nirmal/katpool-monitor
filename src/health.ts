@@ -63,8 +63,8 @@ router.get('/health', async (_req, res) => {
     };
 
     res.status(overallStatus === 'ok' ? 200 : 503).json(response);
-  } catch (err) {
-    logger.error('Health check error:', err);
+  } catch (err: any) {
+    logger.error('Health check error:', { error: err.message });
   }
 });
 
