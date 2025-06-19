@@ -132,7 +132,8 @@ app.get(
     }
 
     const current_hashRate = await getCurrentPoolHashRate();
-    const blocks = await getBlockDetails();
+    const top_100_blocks = await getBlockDetails(1, 100);
+    const totalBlocksCount = await getBlockCount();
     const [lastBlockDetails] = await getBlockDetails(1, 1);
 
     if (lastBlockDetails) {
@@ -148,7 +149,8 @@ app.get(
       url,
       poolFee,
       current_hashRate,
-      blocks,
+      top_100_blocks,
+      totalBlocksCount,
       advertise_image_link: constants.advertise_image_link,
       minPay,
       country: constants.country,
