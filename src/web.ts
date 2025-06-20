@@ -14,6 +14,7 @@ import {
   getBlockCount,
   getTotalPaidKAS,
   getTotalPaidNACHO,
+  getBlockCountForLast24H,
 } from './db';
 import { getCurrentPoolHashRate } from './utils';
 import * as constants from './constants';
@@ -247,6 +248,14 @@ app.get(
 );
 
 app.get(
+  '/api/pool/blockcount24h',
+  asyncHandler(async (req, res) => {
+    const blockCount24h = await getBlockCountForLast24H();
+    res.status(200).json({ blockCount24h });
+  })
+);
+
+app.get(
   '/api/pool/48hNACHOPayouts',
   asyncHandler(async (req, res) => {
     const nacho_payments = await getNachoPaymentsGroupedByWallet();
@@ -272,7 +281,8 @@ app.get(
 app.get(
   '/api/pool/totalPaidKAS',
   asyncHandler(async (req, res) => {
-    const totalPaidKAS = await getTotalPaidKAS();
+    const walletAddress = req.query.wallet as string | undefined;
+    const totalPaidKAS = await getTotalPaidKAS(walletAddress);
     res.status(200).json({ totalPaidKAS });
   })
 );
@@ -280,7 +290,8 @@ app.get(
 app.get(
   '/api/pool/totalPaidNACHO',
   asyncHandler(async (req, res) => {
-    const totalPaidNACHO = await getTotalPaidNACHO();
+    const walletAddress = req.query.wallet as string | undefined;
+    const totalPaidNACHO = await getTotalPaidNACHO(walletAddress);
     res.status(200).json({ totalPaidNACHO });
   })
 );

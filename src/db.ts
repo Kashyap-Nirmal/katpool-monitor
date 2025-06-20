@@ -103,6 +103,23 @@ export async function getBlockCount(): Promise<number> {
   }
 }
 
+export async function getBlockCountForLast24H(): Promise<number> {
+  try {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const count = await prisma.block_details.count({
+      where: {
+        timestamp: {
+          gte: twentyFourHoursAgo,
+        },
+      },
+    });
+    return count;
+  } catch (error: any) {
+    logger.error('DB: Error getting block count for last 24H', { error: error.message });
+    throw error;
+  }
+}
+
 export async function getTotals(): Promise<TotalResponse> {
   // logger.info('DB: getting totals');
   try {
@@ -341,9 +358,18 @@ export async function getBalanceByWallet(wallet: string): Promise<BalanceByWalle
   }
 }
 
-export async function getTotalPaidKAS(): Promise<number> {
+export async function getTotalPaidKAS(walletAddress?: string): Promise<number> {
   try {
+    const whereClause = walletAddress
+      ? {
+          wallet_address: {
+            has: walletAddress,
+          },
+        }
+      : {};
+
     const result = await prisma.payments.aggregate({
+      where: whereClause,
       _sum: {
         amount: true,
       },
@@ -355,9 +381,18 @@ export async function getTotalPaidKAS(): Promise<number> {
   }
 }
 
-export async function getTotalPaidNACHO(): Promise<number> {
+export async function getTotalPaidNACHO(walletAddress?: string): Promise<number> {
   try {
+    const whereClause = walletAddress
+      ? {
+          wallet_address: {
+            has: walletAddress,
+          },
+        }
+      : {};
+
     const result = await prisma.nacho_payments.aggregate({
+      where: whereClause,
       _sum: {
         nacho_amount: true,
       },
