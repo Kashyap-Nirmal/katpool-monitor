@@ -14,6 +14,7 @@ import {
   getBlockCount,
   getTotalPaidKAS,
   getTotalPaidNACHO,
+  getBlockCountForLast24H,
 } from './db';
 import { getCurrentPoolHashRate } from './utils';
 import * as constants from './constants';
@@ -243,6 +244,14 @@ app.get(
         totalPages: totalCount ? Math.ceil(totalCount / perPage) : undefined,
       },
     });
+  })
+);
+
+app.get(
+  '/api/pool/blockcount24h',
+  asyncHandler(async (req, res) => {
+    const blockCount24h = await getBlockCountForLast24H();
+    res.status(200).json({ blockCount24h });
   })
 );
 
