@@ -272,7 +272,8 @@ app.get(
 app.get(
   '/api/pool/totalPaidKAS',
   asyncHandler(async (req, res) => {
-    const totalPaidKAS = await getTotalPaidKAS();
+    const walletAddress = req.query.wallet as string | undefined;
+    const totalPaidKAS = await getTotalPaidKAS(walletAddress);
     res.status(200).json({ totalPaidKAS });
   })
 );
@@ -280,7 +281,8 @@ app.get(
 app.get(
   '/api/pool/totalPaidNACHO',
   asyncHandler(async (req, res) => {
-    const totalPaidNACHO = await getTotalPaidNACHO();
+    const walletAddress = req.query.wallet as string | undefined;
+    const totalPaidNACHO = await getTotalPaidNACHO(walletAddress);
     res.status(200).json({ totalPaidNACHO });
   })
 );

@@ -341,9 +341,18 @@ export async function getBalanceByWallet(wallet: string): Promise<BalanceByWalle
   }
 }
 
-export async function getTotalPaidKAS(): Promise<number> {
+export async function getTotalPaidKAS(walletAddress?: string): Promise<number> {
   try {
+    const whereClause = walletAddress
+      ? {
+          wallet_address: {
+            has: walletAddress,
+          },
+        }
+      : {};
+
     const result = await prisma.payments.aggregate({
+      where: whereClause,
       _sum: {
         amount: true,
       },
@@ -355,9 +364,18 @@ export async function getTotalPaidKAS(): Promise<number> {
   }
 }
 
-export async function getTotalPaidNACHO(): Promise<number> {
+export async function getTotalPaidNACHO(walletAddress?: string): Promise<number> {
   try {
+    const whereClause = walletAddress
+      ? {
+          wallet_address: {
+            has: walletAddress,
+          },
+        }
+      : {};
+
     const result = await prisma.nacho_payments.aggregate({
+      where: whereClause,
       _sum: {
         nacho_amount: true,
       },
