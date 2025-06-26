@@ -149,23 +149,26 @@ export async function getTotals(): Promise<TotalResponse> {
 export async function getPayments(tableName: string): Promise<Payment[] | NachoPayment[]> {
   try {
     if (tableName === 'payments') {
-      const payments = await prisma.payments.findMany({
-        select: {
-          wallet_address: true,
+      const payments = await prisma.payments.groupBy({
+        by: ['transaction_hash'],
+        _sum: {
           amount: true,
+        },
+        _max: {
           timestamp: true,
-          transaction_hash: true,
         },
         orderBy: {
-          timestamp: 'desc',
+          _max: {
+            timestamp: 'desc',
+          },
         },
         take: 500,
       });
 
       return payments.map((payment) => ({
-        wallet_address: payment.wallet_address,
-        amount: Number(payment.amount),
-        timestamp: payment.timestamp || new Date(),
+        wallet_address: [],
+        amount: Number(payment._sum.amount || 0),
+        timestamp: payment._max.timestamp || new Date(),
         transaction_hash: payment.transaction_hash,
       }));
     } else {
