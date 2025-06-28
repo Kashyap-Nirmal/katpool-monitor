@@ -11,6 +11,7 @@ import {
   BalanceByWalletResponse,
   NachoPaymentGrouped,
   BalancesResponse,
+  PaginatedResponse,
 } from './types';
 
 dotenv.config();
@@ -198,46 +199,6 @@ export async function getPayments(tableName: string): Promise<Payment[] | NachoP
   }
 }
 
-export async function getPaymentsByWallet(walletAddress: string, tableName: string) {
-  logger.info(`DB: getting payments for wallet_address: ${walletAddress}`);
-  try {
-    if (tableName === 'payments') {
-      const payments = await prisma.payments.findMany({
-        where: {
-          wallet_address: {
-            has: walletAddress,
-          },
-        },
-        orderBy: {
-          timestamp: 'desc',
-        },
-      });
-      return payments.map((payment) => ({
-        ...payment,
-        amount: Number(payment.amount),
-      }));
-    } else {
-      const nachoPayments = await prisma.nacho_payments.findMany({
-        where: {
-          wallet_address: {
-            has: walletAddress,
-          },
-        },
-        orderBy: {
-          timestamp: 'desc',
-        },
-      });
-      return nachoPayments.map((payment) => ({
-        ...payment,
-        nacho_amount: Number(payment.nacho_amount),
-      }));
-    }
-  } catch (error: any) {
-    logger.error('DB: Error getting payments by wallet', { error: error.message });
-    throw error;
-  }
-}
-
 export async function getKASPayoutForLast48H(): Promise<KASPayout48H[]> {
   try {
     const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
@@ -403,6 +364,217 @@ export async function getTotalPaidNACHO(walletAddress?: string): Promise<number>
     return Number(result._sum.nacho_amount || 0);
   } catch (error: any) {
     logger.error('DB: Error getting total paid NACHO', { error: error.message });
+    throw error;
+  }
+}
+
+export async function getCombinedPaymentsByWallet(
+  walletAddress: string,
+  page?: number,
+  perPage?: number
+): Promise<PaginatedResponse<Array<Payment | (NachoPayment & { payment_type: 'KAS' | 'NACHO' })>>> {
+  logger.info(`DB: getting combined KAS and NACHO payments for wallet_address: ${walletAddress}`);
+  try {
+    // Get KAS payments
+    const kasPayments = await prisma.payments.findMany({
+      where: {
+        wallet_address: {
+          has: walletAddress,
+        },
+      },
+      select: {
+        wallet_address: true,
+        amount: true,
+        timestamp: true,
+        transaction_hash: true,
+      },
+      orderBy: {
+        timestamp: 'desc' as const,
+      },
+    });
+
+    // Get Nacho payments
+    const nachoPayments = await prisma.nacho_payments.findMany({
+      where: {
+        wallet_address: {
+          has: walletAddress,
+        },
+      },
+      select: {
+        wallet_address: true,
+        nacho_amount: true,
+        timestamp: true,
+        transaction_hash: true,
+      },
+      orderBy: {
+        timestamp: 'desc' as const,
+      },
+    });
+
+    // Combine and transform payments
+    const combinedPayments = [
+      ...kasPayments.map(
+        (payment) =>
+          ({
+            wallet_address: payment.wallet_address,
+            amount: Number(payment.amount),
+            timestamp: payment.timestamp || new Date(),
+            transaction_hash: payment.transaction_hash,
+          }) as Payment
+      ),
+      ...nachoPayments.map(
+        (payment) =>
+          ({
+            wallet_address: payment.wallet_address[0] || '',
+            nacho_amount: Number(payment.nacho_amount),
+            timestamp: payment.timestamp || new Date(),
+            transaction_hash: payment.transaction_hash,
+            payment_type: 'NACHO' as const,
+          }) as NachoPayment & { payment_type: 'NACHO' }
+      ),
+    ];
+
+    // Sort by timestamp (descending)
+    combinedPayments.sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+
+    // Calculate pagination
+    const totalCount = combinedPayments.length;
+    const currentPage = page || 1;
+    const itemsPerPage = perPage || 10;
+
+    // If no payments found, return empty array with pagination
+    if (totalCount === 0) {
+      return {
+        data: [],
+        pagination: {
+          currentPage: currentPage,
+          perPage: itemsPerPage,
+          totalCount: 0,
+          totalPages: 0,
+        },
+      };
+    }
+
+    // Apply pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedPayments = combinedPayments.slice(startIndex, endIndex);
+
+    const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+    return {
+      data: paginatedPayments,
+      pagination: {
+        currentPage: currentPage,
+        perPage: itemsPerPage,
+        totalCount: totalCount,
+        totalPages: totalPages,
+      },
+    };
+  } catch (error: any) {
+    logger.error('DB: Error getting combined payments by wallet', { error: error.message });
+    throw error;
+  }
+}
+
+export async function getCombinedPayouts(
+  page?: number,
+  perPage?: number
+): Promise<PaginatedResponse<Array<Payment | (NachoPayment & { payment_type: 'KAS' | 'NACHO' })>>> {
+  logger.info('DB: getting combined KAS and NACHO payouts');
+  try {
+    // Get KAS payments
+    const kasPayments = await prisma.payments.findMany({
+      select: {
+        wallet_address: true,
+        amount: true,
+        timestamp: true,
+        transaction_hash: true,
+      },
+      orderBy: {
+        timestamp: 'desc' as const,
+      },
+    });
+
+    // Get Nacho payments
+    const nachoPayments = await prisma.nacho_payments.findMany({
+      select: {
+        wallet_address: true,
+        nacho_amount: true,
+        timestamp: true,
+        transaction_hash: true,
+      },
+      orderBy: {
+        timestamp: 'desc' as const,
+      },
+    });
+
+    // Combine and transform payments
+    const combinedPayments = [
+      ...kasPayments.map(
+        (payment) =>
+          ({
+            wallet_address: payment.wallet_address,
+            amount: Number(payment.amount),
+            timestamp: payment.timestamp || new Date(),
+            transaction_hash: payment.transaction_hash,
+          }) as Payment
+      ),
+      ...nachoPayments.map(
+        (payment) =>
+          ({
+            wallet_address: payment.wallet_address[0] || '',
+            nacho_amount: Number(payment.nacho_amount),
+            timestamp: payment.timestamp || new Date(),
+            transaction_hash: payment.transaction_hash,
+            payment_type: 'NACHO' as const,
+          }) as NachoPayment & { payment_type: 'NACHO' }
+      ),
+    ];
+
+    // Sort by timestamp (descending)
+    combinedPayments.sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+
+    // Calculate pagination
+    const totalCount = combinedPayments.length;
+    const currentPage = page || 1;
+    const itemsPerPage = perPage || 10;
+
+    // If no payments found, return empty array with pagination
+    if (totalCount === 0) {
+      return {
+        data: [],
+        pagination: {
+          currentPage: currentPage,
+          perPage: itemsPerPage,
+          totalCount: 0,
+          totalPages: 0,
+        },
+      };
+    }
+
+    // Apply pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedPayments = combinedPayments.slice(startIndex, endIndex);
+
+    const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+    return {
+      data: paginatedPayments,
+      pagination: {
+        currentPage: currentPage,
+        perPage: itemsPerPage,
+        totalCount: totalCount,
+        totalPages: totalPages,
+      },
+    };
+  } catch (error: any) {
+    logger.error('DB: Error getting combined payouts', { error: error.message });
     throw error;
   }
 }
