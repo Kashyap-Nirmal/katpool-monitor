@@ -4,7 +4,6 @@ import path from 'path';
 import {
   getBalances,
   getTotals,
-  getPayments,
   getBlockDetails,
   getBalanceByWallet,
   getKASPayoutForLast48H,
@@ -15,6 +14,7 @@ import {
   getTotalPaidNACHO,
   getBlockCountForLast24H,
   getCombinedPaymentsByWallet,
+  getCombinedPayouts,
 } from './db';
 import { getCurrentPoolHashRate } from './utils';
 import * as constants from './constants';
@@ -166,13 +166,31 @@ app.get(
 );
 
 app.get(
+  '/api/pool/payouts/:wallet_address',
+  asyncHandler(async (req, res) => {
+    const walletAddress = req.params.wallet_address;
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const perPage = req.query.perPage ? parseInt(req.query.perPage as string) : 10;
+
+    const payouts = await getCombinedPaymentsByWallet(walletAddress, page, perPage);
+    res.status(200).json({
+      data: payouts.data,
+      pagination: payouts.pagination,
+    });
+  })
+);
+
+app.get(
   '/api/pool/payouts',
   asyncHandler(async (req, res) => {
-    const payments = await getPayments('payments');
-    if (!payments) {
-      throw new DatabaseError('Failed to retrieve payments');
-    }
-    res.status(200).json(payments);
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const perPage = req.query.perPage ? parseInt(req.query.perPage as string) : 500;
+
+    const payouts = await getCombinedPayouts(page, perPage);
+    res.status(200).json({
+      data: payouts.data,
+      pagination: payouts.pagination,
+    });
   })
 );
 
@@ -187,34 +205,6 @@ app.get(
   })
 );
 
-app.get(
-  '/api/pool/nacho_payouts',
-  asyncHandler(async (req, res) => {
-    const payments = await getPayments('nacho_payments');
-    if (!payments) {
-      throw new DatabaseError('Failed to retrieve nacho payments');
-    }
-    res.status(200).json(payments);
-  })
-);
-
-app.get(
-  '/api/payments/:wallet_address',
-  asyncHandler(async (req, res) => {
-    const walletAddress = req.params.wallet_address;
-    const page = req.query.page ? parseInt(req.query.page as string) : 1;
-    const perPage = req.query.perPage ? parseInt(req.query.perPage as string) : 10;
-
-    const payments = await getCombinedPaymentsByWallet(walletAddress, page, perPage);
-
-    res.status(200).json({
-      data: payments.data,
-      pagination: payments.pagination,
-    });
-  })
-);
-
-// TODO: need to change nginx config for this route
 app.get(
   '/api/pool/blockdetails',
   asyncHandler(async (req, res) => {
