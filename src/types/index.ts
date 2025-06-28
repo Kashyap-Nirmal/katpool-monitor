@@ -4,6 +4,18 @@ export type BalancesResponse = Record<string, Record<string, Decimal>>;
 export type BalanceByWalletResponse = Record<string, Record<string, [Decimal, Decimal]>>;
 export type TotalResponse = Record<string, Decimal>;
 
+export type PaginationInfo = {
+  currentPage: number;
+  perPage: number;
+  totalCount: number;
+  totalPages: number;
+};
+
+export type PaginatedResponse<T> = {
+  data: T;
+  pagination: PaginationInfo;
+};
+
 export type BlockDetail = {
   mined_block_hash: string;
   miner_id: string;

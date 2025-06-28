@@ -4,7 +4,6 @@ import path from 'path';
 import {
   getBalances,
   getTotals,
-  getPaymentsByWallet,
   getPayments,
   getBlockDetails,
   getBalanceByWallet,
@@ -15,6 +14,7 @@ import {
   getTotalPaidKAS,
   getTotalPaidNACHO,
   getBlockCountForLast24H,
+  getCombinedPaymentsByWallet,
 } from './db';
 import { getCurrentPoolHashRate } from './utils';
 import * as constants from './constants';
@@ -188,18 +188,6 @@ app.get(
 );
 
 app.get(
-  '/api/payments/:wallet_address',
-  asyncHandler(async (req, res) => {
-    const walletAddress = req.params.wallet_address;
-    const payments = await getPaymentsByWallet(walletAddress, 'payments');
-    if (!payments) {
-      throw new NotFoundError(`No payments found for wallet: ${walletAddress}`);
-    }
-    res.status(200).json(payments);
-  })
-);
-
-app.get(
   '/api/pool/nacho_payouts',
   asyncHandler(async (req, res) => {
     const payments = await getPayments('nacho_payments');
@@ -211,14 +199,18 @@ app.get(
 );
 
 app.get(
-  '/api/nacho_payments/:wallet_address',
+  '/api/payments/:wallet_address',
   asyncHandler(async (req, res) => {
     const walletAddress = req.params.wallet_address;
-    const payments = await getPaymentsByWallet(walletAddress, 'nacho_payments');
-    if (!payments) {
-      throw new NotFoundError(`No nacho payments found for wallet: ${walletAddress}`);
-    }
-    res.status(200).json(payments);
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const perPage = req.query.perPage ? parseInt(req.query.perPage as string) : 10;
+
+    const payments = await getCombinedPaymentsByWallet(walletAddress, page, perPage);
+
+    res.status(200).json({
+      data: payments.data,
+      pagination: payments.pagination,
+    });
   })
 );
 
