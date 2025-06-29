@@ -485,20 +485,23 @@ export async function getCombinedPayouts(
 ): Promise<PaginatedResponse<Array<Payment | (NachoPayment & { payment_type: 'KAS' | 'NACHO' })>>> {
   logger.info('DB: getting combined KAS and NACHO payouts');
   try {
-    // Get KAS payments
-    const kasPayments = await prisma.payments.findMany({
-      select: {
-        wallet_address: true,
+    // Get KAS payments grouped by transaction hash
+    const kasPayments = await prisma.payments.groupBy({
+      by: ['transaction_hash'],
+      _sum: {
         amount: true,
+      },
+      _max: {
         timestamp: true,
-        transaction_hash: true,
       },
       orderBy: {
-        timestamp: 'desc' as const,
+        _max: {
+          timestamp: 'desc',
+        },
       },
     });
 
-    // Get Nacho payments
+    // Get Nacho payments (no grouping)
     const nachoPayments = await prisma.nacho_payments.findMany({
       select: {
         wallet_address: true,
@@ -516,9 +519,9 @@ export async function getCombinedPayouts(
       ...kasPayments.map(
         (payment) =>
           ({
-            wallet_address: payment.wallet_address,
-            amount: Number(payment.amount),
-            timestamp: payment.timestamp || new Date(),
+            wallet_address: [],
+            amount: Number(payment._sum.amount || 0),
+            timestamp: payment._max.timestamp || new Date(),
             transaction_hash: payment.transaction_hash,
           }) as Payment
       ),
