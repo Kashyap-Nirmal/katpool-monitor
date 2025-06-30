@@ -31,6 +31,7 @@ logger.info('Main: starting main()');
 async function main() {
   // Set the initial traceId in the parent context
   try {
+    logger.info('DATABASE_URL', { config: process.env.DATABASE_URL });
     logger.info('Main: starting config server', { traceId: 'system' });
     configServer();
     logger.info('Main: starting API server for front-end', { traceId: 'system' });
