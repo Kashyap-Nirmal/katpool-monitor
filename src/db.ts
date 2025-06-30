@@ -17,8 +17,8 @@ import {
 dotenv.config();
 
 // Check if DATABASE_URL is configured
-if (!process.env.DATABASE_URL) {
-  logger.error('DB: Error - DATABASE_URL environment variable is not set.');
+if (!process.env.DATABASE_URL_MONITOR) {
+  logger.error('DB: Error - DATABASE_URL_MONITOR environment variable is not set.');
   process.exit(1);
 }
 
